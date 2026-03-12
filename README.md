@@ -68,9 +68,9 @@ npm install
 #### Environment Configuration
 Create `.env` file:
 \`\`\`
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/school-erp
+MONGODB_URI= Mongo url
 JWT_SECRET=your_very_secure_secret_key_here
-PORT=5000
+PORT= port number
 NODE_ENV=development
 \`\`\`
 
