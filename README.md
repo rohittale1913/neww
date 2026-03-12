@@ -384,7 +384,7 @@ For frontend components, see component files for usage patterns.
 MIT License - Feel free to use for educational & commercial purposes.
 
 ## Contact
-For queries or support, reach out to: support@schoolerp.com
+For queries or support, reach out to: rohit.tale1913@gmail.com
 
 ---
 
