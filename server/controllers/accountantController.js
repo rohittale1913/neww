@@ -8,7 +8,15 @@ export const getAllAccountants = async (req, res) => {
       .populate('userId', 'name email phone role')
       .lean()
       .sort({ createdAt: -1 });
-    res.json(accountants);
+    
+    // Ensure email and phone are populated from userId if not already set
+    const enrichedAccountants = accountants.map(accountant => ({
+      ...accountant,
+      email: accountant.email || accountant.userId?.email || '-',
+      phone: accountant.phone || accountant.userId?.phone || '-'
+    }));
+    
+    res.json(enrichedAccountants);
   } catch (error) {
     console.error('Error fetching accountants:', error);
     res.status(500).json({ message: 'Failed to fetch accountants', error: error.message });
@@ -24,7 +32,15 @@ export const getAccountantById = async (req, res) => {
     if (!accountant) {
       return res.status(404).json({ message: 'Accountant not found' });
     }
-    res.json(accountant);
+    
+    // Ensure email and phone are populated from userId if not already set
+    const enrichedAccountant = {
+      ...accountant,
+      email: accountant.email || accountant.userId?.email || '-',
+      phone: accountant.phone || accountant.userId?.phone || '-'
+    };
+    
+    res.json(enrichedAccountant);
   } catch (error) {
     console.error('Error fetching accountant:', error);
     res.status(500).json({ message: error.message });
@@ -68,6 +84,8 @@ export const createAccountant = async (req, res) => {
       accountantId,
       userId,
       name: user.name,
+      email: user.email,
+      phone: user.phone,
       qualification: qualification || '',
       experience: experience || 0,
       bankAccount: bankAccount || '',
@@ -102,26 +120,55 @@ export const createAccountant = async (req, res) => {
 // Update accountant
 export const updateAccountant = async (req, res) => {
   try {
-    const { qualification, experience, bankAccount, ifscCode } = req.body;
+    const { name, email, phone, qualification, experience, bankAccount, ifscCode, department } = req.body;
 
-    const accountant = await Accountant.findByIdAndUpdate(
-      req.params.id,
-      { 
-        qualification, 
-        experience, 
-        bankAccount,
-        ifscCode,
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
-
+    // Find the accountant record
+    const accountant = await Accountant.findById(req.params.id);
     if (!accountant) {
       return res.status(404).json({ message: 'Accountant not found' });
     }
 
-    res.json({ message: 'Accountant updated successfully', accountant });
+    // Update the User record (name, email, phone)
+    if (accountant.userId) {
+      await User.findByIdAndUpdate(
+        accountant.userId,
+        { 
+          name: name || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
+          updatedAt: Date.now()
+        },
+        { new: true }
+      );
+    }
+
+    // Update the Accountant record
+    const updatedAccountant = await Accountant.findByIdAndUpdate(
+      req.params.id,
+      { 
+        name: name || accountant.name,
+        qualification: qualification !== undefined ? qualification : accountant.qualification,
+        experience: experience !== undefined ? experience : accountant.experience,
+        bankAccount: bankAccount !== undefined ? bankAccount : accountant.bankAccount,
+        ifscCode: ifscCode !== undefined ? ifscCode : accountant.ifscCode,
+        department: department !== undefined ? department : accountant.department,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    )
+    .populate('userId', 'name email phone role')
+    .lean();
+
+    // Enrich with user data
+    const enrichedAccountant = {
+      ...updatedAccountant,
+      email: updatedAccountant?.email || email || '-',
+      phone: updatedAccountant?.phone || phone || '-'
+    };
+
+    res.json({ message: 'Accountant updated successfully', accountant: enrichedAccountant });
   } catch (error) {
+    console.error('Error updating accountant:', error);
     res.status(500).json({ message: error.message });
   }
 };

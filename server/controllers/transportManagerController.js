@@ -8,7 +8,15 @@ export const getAllTransportManagers = async (req, res) => {
       .populate('userId', 'name email phone role')
       .lean()
       .sort({ createdAt: -1 });
-    res.json(managers);
+    
+    // Ensure email and phone are populated from userId if not already set
+    const enrichedManagers = managers.map(manager => ({
+      ...manager,
+      email: manager.email || manager.userId?.email || '-',
+      phone: manager.phone || manager.userId?.phone || '-'
+    }));
+    
+    res.json(enrichedManagers);
   } catch (error) {
     console.error('Error fetching transport managers:', error);
     res.status(500).json({ message: 'Failed to fetch transport managers', error: error.message });
@@ -24,7 +32,15 @@ export const getTransportManagerById = async (req, res) => {
     if (!manager) {
       return res.status(404).json({ message: 'Transport manager not found' });
     }
-    res.json(manager);
+    
+    // Ensure email and phone are populated from userId if not already set
+    const enrichedManager = {
+      ...manager,
+      email: manager.email || manager.userId?.email || '-',
+      phone: manager.phone || manager.userId?.phone || '-'
+    };
+    
+    res.json(enrichedManager);
   } catch (error) {
     console.error('Error fetching transport manager:', error);
     res.status(500).json({ message: error.message });
@@ -68,6 +84,8 @@ export const createTransportManager = async (req, res) => {
       transportManagerId,
       userId,
       name: user.name,
+      email: user.email,
+      phone: user.phone,
       qualification: qualification || '',
       experience: experience || 0,
       licenseNumber: licenseNumber || '',
@@ -102,31 +120,61 @@ export const createTransportManager = async (req, res) => {
 // Update transport manager
 export const updateTransportManager = async (req, res) => {
   try {
-    const { qualification, experience, licenseNumber, licenseExpiry, busesManaged, routesManaged } = req.body;
+    const { name, email, phone, qualification, experience, licenseNumber, licenseExpiry, busesManaged, routesManaged, department } = req.body;
 
-    const manager = await TransportManager.findByIdAndUpdate(
-      req.params.id,
-      { 
-        qualification, 
-        experience, 
-        licenseNumber,
-        licenseExpiry,
-        busesManaged,
-        routesManaged,
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
-
+    // Find the transport manager record
+    const manager = await TransportManager.findById(req.params.id);
     if (!manager) {
       return res.status(404).json({ message: 'Transport manager not found' });
     }
 
-    res.json({ message: 'Transport manager updated successfully', manager });
+    // Update the User record (name, email, phone)
+    if (manager.userId) {
+      await User.findByIdAndUpdate(
+        manager.userId,
+        { 
+          name: name || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
+          updatedAt: Date.now()
+        },
+        { new: true }
+      );
+    }
+
+    // Update the TransportManager record
+    const updatedManager = await TransportManager.findByIdAndUpdate(
+      req.params.id,
+      { 
+        name: name || manager.name,
+        qualification: qualification !== undefined ? qualification : manager.qualification,
+        experience: experience !== undefined ? experience : manager.experience,
+        licenseNumber: licenseNumber !== undefined ? licenseNumber : manager.licenseNumber,
+        licenseExpiry: licenseExpiry !== undefined ? licenseExpiry : manager.licenseExpiry,
+        busesManaged: busesManaged !== undefined ? busesManaged : manager.busesManaged,
+        routesManaged: routesManaged !== undefined ? routesManaged : manager.routesManaged,
+        department: department !== undefined ? department : manager.department,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    )
+    .populate('userId', 'name email phone role')
+    .lean();
+
+    // Enrich with user data
+    const enrichedManager = {
+      ...updatedManager,
+      email: updatedManager?.email || email || '-',
+      phone: updatedManager?.phone || phone || '-'
+    };
+
+    res.json({ message: 'Transport manager updated successfully', transportManager: enrichedManager });
   } catch (error) {
+    console.error('Error updating transport manager:', error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Delete transport manager
 export const deleteTransportManager = async (req, res) => {

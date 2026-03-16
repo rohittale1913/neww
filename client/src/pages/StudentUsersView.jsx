@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { authAPI, studentAPI } from '../services/api';
 import { FiSearch, FiTrash2 } from 'react-icons/fi';
+import StudentProfileModal from '../components/StudentProfileModal';
+import EditStudentModal from '../components/EditStudentModal';
 
 const StudentUsersView = () => {
   const [students, setStudents] = useState([]);
@@ -10,6 +12,8 @@ const StudentUsersView = () => {
   const [success, setSuccess] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -82,6 +86,39 @@ const StudentUsersView = () => {
     }
   };
 
+  const handleViewProfile = async (student) => {
+    try {
+      const response = await studentAPI.getAll?.() || { data: [] };
+      const profiles = response.data || [];
+      const fullProfile = profiles.find(p => 
+        p.userId === student._id || p.userId?.id === student._id || p.userId?._id === student._id
+      );
+      
+      if (fullProfile) {
+        setSelectedStudent({
+          ...student,
+          ...fullProfile,
+          email: student.email,
+          phone: student.phone,
+          isActive: student.isActive
+        });
+      } else {
+        setSelectedStudent(student);
+      }
+    } catch (err) {
+      console.error('Failed to fetch full student profile:', err);
+      setSelectedStudent(student);
+    }
+  };
+
+  const handleEditSave = (updatedStudent) => {
+    setSuccess('Student profile updated successfully');
+    setEditingStudent(null);
+    // Refresh the students list
+    fetchStudents();
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -91,8 +128,13 @@ const StudentUsersView = () => {
   };
 
   const filteredStudents = students.filter(student => {
-    const matchName = student.name.toLowerCase().includes(filters.searchName.toLowerCase());
-    const matchEmail = student.email.toLowerCase().includes(filters.searchEmail.toLowerCase());
+    const studentName = (student.name || '').toLowerCase();
+    const studentEmail = (student.email || '').toLowerCase();
+    const searchName = filters.searchName.toLowerCase();
+    const searchEmail = filters.searchEmail.toLowerCase();
+    
+    const matchName = !searchName || studentName.includes(searchName);
+    const matchEmail = !searchEmail || studentEmail.includes(searchEmail);
     const matchClass = !filters.class || student.class === filters.class;
     const matchSection = !filters.section || student.section === filters.section;
     const matchBlood = !filters.bloodGroup || student.bloodGroup === filters.bloodGroup;
@@ -105,8 +147,7 @@ const StudentUsersView = () => {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-slate-900">Student Users 👥</h1>
-          <p className="text-slate-600 text-sm mt-2">View and manage all registered students in the system</p>
+          <h1 className="text-4xl font-bold text-slate-900">Student Users </h1>
         </div>
 
         {/* Filters */}
@@ -217,7 +258,14 @@ const StudentUsersView = () => {
                         idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                       } hover:bg-blue-50`}
                     >
-                      <td className="py-3 px-4 font-medium text-gray-900">{student.name}</td>
+                      <td className="py-3 px-4 font-medium text-gray-900">
+                        <button
+                          onClick={() => handleViewProfile(student)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline transition"
+                        >
+                          {student.name}
+                        </button>
+                      </td>
                       <td className="py-3 px-4 text-gray-600">{student.email}</td>
                       <td className="py-3 px-4 text-gray-600">{student.class || '-'}</td>
                       <td className="py-3 px-4 text-gray-600">{student.section || '-'}</td>
@@ -283,6 +331,20 @@ const StudentUsersView = () => {
             </div>
           </div>
         )}
+
+        {/* Student Profile Modal */}
+        <StudentProfileModal 
+          student={selectedStudent} 
+          onClose={() => setSelectedStudent(null)}
+          onEdit={() => setEditingStudent(selectedStudent)}
+        />
+
+        {/* Edit Student Modal */}
+        <EditStudentModal
+          student={editingStudent}
+          onClose={() => setEditingStudent(null)}
+          onSave={handleEditSave}
+        />
       </div>
     </DashboardLayout>
   );

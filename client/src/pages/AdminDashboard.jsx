@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { studentAPI, attendanceAPI, feeAPI } from '../services/api';
+import { studentAPI, teacherAPI, accountantAPI, attendanceAPI, feeAPI } from '../services/api';
 import { FiUsers, FiDollarSign, FiCheckCircle, FiCalendar } from 'react-icons/fi';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalTeachers: 0,
+    totalStaff: 0,
     pendingFees: 0,
     presentToday: 0
   });
@@ -15,14 +18,17 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [students, fees] = await Promise.all([
+        const [students, teachers, staff, fees] = await Promise.all([
           studentAPI.getAll(),
+          teacherAPI.getAll(),
+          accountantAPI.getAll(),
           feeAPI.getPending()
         ]);
 
         setStats({
           totalStudents: students.data.length,
-          totalTeachers: 0, // Would fetch from teacher API
+          totalTeachers: teachers.data.length,
+          totalStaff: staff.data.length,
           pendingFees: fees.data.length,
           presentToday: 0
         });
@@ -36,8 +42,11 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const StatCard = ({ icon: Icon, label, value, bgColor, iconColor }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition p-6 flex items-center gap-4">
+  const StatCard = ({ icon: Icon, label, value, bgColor, iconColor, onClick }) => (
+    <div 
+      onClick={onClick}
+      className={`bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition p-6 flex items-center gap-4 ${onClick ? 'cursor-pointer' : ''}`}
+    >
       <div className={`text-3xl p-3 rounded-lg ${bgColor}`}>
         <Icon className={iconColor} />
       </div>
@@ -51,9 +60,17 @@ const AdminDashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-900">Welcome Back! 👋</h1>
-          <p className="text-slate-600 mt-2">Here's your school management overview</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900">Welcome Back !</h1>
+            {/* <p className="text-slate-600 mt-2">Here's your school management overview</p> */}
+          </div>
+              {/* <button
+                onClick={() => navigate('/admin/registration')}
+                className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+              >
+                + Register User
+              </button> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -63,6 +80,7 @@ const AdminDashboard = () => {
             value={stats.totalStudents}
             bgColor="bg-blue-100"
             iconColor="text-primary"
+            onClick={() => navigate('/admin/students-view')}
           />
           <StatCard 
             icon={FiUsers} 
@@ -70,6 +88,15 @@ const AdminDashboard = () => {
             value={stats.totalTeachers}
             bgColor="bg-emerald-100"
             iconColor="text-emerald-600"
+            onClick={() => navigate('/admin/teachers-view')}
+          />
+          <StatCard 
+            icon={FiUsers} 
+            label="Total Staff" 
+            value={stats.totalStaff}
+            bgColor="bg-orange-100"
+            iconColor="text-orange-600"
+            onClick={() => navigate('/admin/staff-view')}
           />
           <StatCard 
             icon={FiDollarSign} 
@@ -77,13 +104,6 @@ const AdminDashboard = () => {
             value={stats.pendingFees}
             bgColor="bg-rose-100"
             iconColor="text-rose-600"
-          />
-          <StatCard 
-            icon={FiCheckCircle} 
-            label="Present Today" 
-            value={stats.presentToday}
-            bgColor="bg-violet-100"
-            iconColor="text-accent"
           />
         </div>
 

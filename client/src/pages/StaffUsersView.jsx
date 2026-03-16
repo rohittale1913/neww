@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { authAPI, accountantAPI, librarianAPI, transportManagerAPI } from '../services/api';
 import { FiTrash2 } from 'react-icons/fi';
+import StaffProfileModal from '../components/StaffProfileModal';
+import EditStaffModal from '../components/EditStaffModal';
 
 const StaffUsersView = () => {
   const [activeRole, setActiveRole] = useState('accountant');
@@ -11,6 +13,8 @@ const StaffUsersView = () => {
   const [success, setSuccess] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [editingStaff, setEditingStaff] = useState(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -26,89 +30,146 @@ const StaffUsersView = () => {
     fetchStaffUsers();
     const userId = localStorage.getItem('userId');
     setCurrentUserId(userId);
-  }, []);
+  }, [activeRole]);
 
   const fetchStaffUsers = async () => {
     try {
       setLoading(true);
-      const response = await authAPI.getAll?.() || { data: [] };
-      const allUsers = response.data || [];
-      const staff = allUsers.filter(user =>
-        ['accountant', 'librarian', 'transport_manager'].includes(user.role)
-      );
+      setError('');
       
-      // Fetch profiles for each staff member based on their role
-      const staffWithProfiles = await Promise.all(
-        staff.map(async (user) => {
-          try {
-            let profileData = {};
-            
-            if (user.role === 'accountant') {
-              const profileResponse = await accountantAPI.getAll?.() || { data: [] };
-              const profiles = profileResponse.data || [];
-              const profile = profiles.find(p => p.userId === user._id || p.userId?.id === user._id || p.userId?._id === user._id);
-              if (profile) {
-                profileData = {
-                  qualification: profile.qualification || '-',
-                  experience: profile.experience || '-',
-                  bankAccount: profile.bankAccount || '-',
-                  ifscCode: profile.ifscCode || '-'
-                };
-              }
-            } else if (user.role === 'librarian') {
-              const profileResponse = await librarianAPI.getAll?.() || { data: [] };
-              const profiles = profileResponse.data || [];
-              const profile = profiles.find(p => p.userId === user._id || p.userId?.id === user._id || p.userId?._id === user._id);
-              if (profile) {
-                profileData = {
-                  qualification: profile.qualification || '-',
-                  experience: profile.experience || '-',
-                  specialization: profile.specialization || '-'
-                };
-              }
-            } else if (user.role === 'transport_manager') {
-              const profileResponse = await transportManagerAPI.getAll?.() || { data: [] };
-              const profiles = profileResponse.data || [];
-              const profile = profiles.find(p => p.userId === user._id || p.userId?.id === user._id || p.userId?._id === user._id);
-              if (profile) {
-                profileData = {
-                  qualification: profile.qualification || '-',
-                  experience: profile.experience || '-',
-                  licenseNumber: profile.licenseNumber || '-',
-                  licenseExpiry: profile.licenseExpiry || null
-                };
-              }
-            }
-            
-            return { ...user, ...profileData };
-          } catch (err) {
-            console.error('Failed to fetch profile for staff member:', user._id);
-            return user;
-          }
-        })
-      );
+      let allStaffData = [];
+      const token = localStorage.getItem('token');
       
-      setStaffUsers(staffWithProfiles);
+      console.log('Token available:', !!token);
+      console.log('Current role:', activeRole);
+
+      // Fetch based on active role
+      if (activeRole === 'accountant') {
+        try {
+          const response = await accountantAPI.getAll();
+          console.log('Accountants response status:', response.status);
+          console.log('Accountants response data:', response.data);
+          allStaffData = response.data || [];
+        } catch (apiErr) {
+          console.error('Accountant API error:', apiErr.response?.status, apiErr.response?.data);
+          throw apiErr;
+        }
+      } else if (activeRole === 'librarian') {
+        try {
+          const response = await librarianAPI.getAll();
+          console.log('Librarians response status:', response.status);
+          console.log('Librarians response data:', response.data);
+          allStaffData = response.data || [];
+        } catch (apiErr) {
+          console.error('Librarian API error:', apiErr.response?.status, apiErr.response?.data);
+          throw apiErr;
+        }
+      } else if (activeRole === 'transport_manager') {
+        try {
+          const response = await transportManagerAPI.getAll();
+          console.log('Transport managers response status:', response.status);
+          console.log('Transport managers response data:', response.data);
+          allStaffData = response.data || [];
+        } catch (apiErr) {
+          console.error('Transport manager API error:', apiErr.response?.status, apiErr.response?.data);
+          throw apiErr;
+        }
+      }
+
+      console.log('Final staff data:', allStaffData);
+      console.log('Staff count:', allStaffData.length);
+      
+      // Ensure allStaffData is an array
+      if (!Array.isArray(allStaffData)) {
+        console.warn('Response data is not an array:', allStaffData);
+        allStaffData = [];
+      }
+      
+      setStaffUsers(allStaffData);
     } catch (err) {
-      setError('Failed to fetch staff users');
+      console.error('Complete error object:', err);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
+      console.error('Error message:', err.message);
+      
+      let errorMessage = 'Failed to fetch staff users. Please try again.';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Unauthorized: Please login again';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Forbidden: You do not have permission to view staff';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Endpoint not found. Please check the server configuration.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      setStaffUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteStaff = async (userId) => {
+  const handleDeleteStaff = async (staffId) => {
     try {
       setLoading(true);
-      await authAPI.delete(userId);
-      setStaffUsers(staffUsers.filter(s => s._id !== userId));
+      
+      // Delete based on active role
+      if (activeRole === 'accountant') {
+        await accountantAPI.delete(staffId);
+      } else if (activeRole === 'librarian') {
+        await librarianAPI.delete(staffId);
+      } else if (activeRole === 'transport_manager') {
+        await transportManagerAPI.delete(staffId);
+      }
+      
+      setStaffUsers(staffUsers.filter(s => s._id !== staffId));
       setSuccess('Staff member deleted successfully');
       setDeleteConfirm(null);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
+      console.error('Delete error:', err);
       setError(err.response?.data?.message || 'Failed to delete staff member');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewProfile = async (staff) => {
+    try {
+      let fullProfile = null;
+      
+      if (activeRole === 'accountant') {
+        const response = await accountantAPI.getAll();
+        fullProfile = response.data?.find(a => a._id === staff._id);
+      } else if (activeRole === 'librarian') {
+        const response = await librarianAPI.getAll();
+        fullProfile = response.data?.find(l => l._id === staff._id);
+      } else if (activeRole === 'transport_manager') {
+        const response = await transportManagerAPI.getAll();
+        fullProfile = response.data?.find(t => t._id === staff._id);
+      }
+      
+      if (fullProfile) {
+        setSelectedStaff(fullProfile);
+      } else {
+        setSelectedStaff(staff);
+      }
+    } catch (err) {
+      console.error('Failed to fetch full staff profile:', err);
+      setSelectedStaff(staff);
+    }
+  };
+
+  const handleEditSave = (updatedStaff) => {
+    setSuccess('Staff profile updated successfully');
+    setEditingStaff(null);
+    // Refresh the staff list
+    fetchStaffUsers();
+    setTimeout(() => setSuccess(''), 3000);
   };
 
   const handleFilterChange = (e) => {
@@ -145,10 +206,14 @@ const StaffUsersView = () => {
   };
 
   const filteredStaff = staffUsers
-    .filter(user => user.role === activeRole)
     .filter(staff => {
-      const matchName = staff.name.toLowerCase().includes(filters.searchName.toLowerCase());
-      const matchEmail = staff.email.toLowerCase().includes(filters.searchEmail.toLowerCase());
+      const staffName = (staff.name || '').toLowerCase();
+      const staffEmail = (staff.email || '').toLowerCase();
+      const searchName = filters.searchName.toLowerCase();
+      const searchEmail = filters.searchEmail.toLowerCase();
+      
+      const matchName = !searchName || staffName.includes(searchName);
+      const matchEmail = !searchEmail || staffEmail.includes(searchEmail);
       
       if (activeRole === 'librarian') {
         const matchSpecialization = !filters.specialization || staff.specialization === filters.specialization;
@@ -286,6 +351,7 @@ const StaffUsersView = () => {
                     <tr>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Qualification</th>
                       {activeRole === 'librarian' && (
                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Specialization</th>
@@ -298,7 +364,6 @@ const StaffUsersView = () => {
                         </>
                       )}
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Experience</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
                     </tr>
@@ -313,8 +378,16 @@ const StaffUsersView = () => {
                             idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                           } hover:${activeRole === 'accountant' ? 'bg-green-50' : activeRole === 'librarian' ? 'bg-yellow-50' : 'bg-indigo-50'}`}
                         >
-                          <td className="py-3 px-4 font-medium text-gray-900">{staff.name}</td>
-                          <td className="py-3 px-4 text-gray-600">{staff.email}</td>
+                          <td className="py-3 px-4 font-medium text-gray-900">
+                            <button
+                              onClick={() => handleViewProfile(staff)}
+                              className="text-blue-600 hover:text-blue-800 hover:underline transition"
+                            >
+                              {staff.name || '-'}
+                            </button>
+                          </td>
+                          <td className="py-3 px-4 text-gray-600">{staff.email || '-'}</td>
+                          <td className="py-3 px-4 text-gray-600">{staff.phone || '-'}</td>
                           <td className="py-3 px-4 text-gray-600">{staff.qualification || '-'}</td>
                           {activeRole === 'librarian' && (
                             <td className="py-3 px-4 text-gray-600">{staff.specialization || '-'}</td>
@@ -337,14 +410,13 @@ const StaffUsersView = () => {
                             </>
                           )}
                           <td className="py-3 px-4 text-gray-600">{staff.experience || '-'} yrs</td>
-                          <td className="py-3 px-4 text-gray-600">{staff.phone || '-'}</td>
                           <td className="py-3 px-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              staff.isActive
+                              staff.isActive !== false
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
-                              {staff.isActive ? '✓ Active' : '✕ Inactive'}
+                              {staff.isActive !== false ? '✓ Active' : '✕ Inactive'}
                             </span>
                           </td>
                           <td className="py-3 px-4">
@@ -399,6 +471,22 @@ const StaffUsersView = () => {
             </div>
           </div>
         )}
+
+        {/* Staff Profile Modal */}
+        <StaffProfileModal 
+          staff={selectedStaff} 
+          role={activeRole}
+          onClose={() => setSelectedStaff(null)}
+          onEdit={() => setEditingStaff(selectedStaff)}
+        />
+
+        {/* Edit Staff Modal */}
+        <EditStaffModal
+          staff={editingStaff}
+          role={activeRole}
+          onClose={() => setEditingStaff(null)}
+          onSave={handleEditSave}
+        />
       </div>
     </DashboardLayout>
   );

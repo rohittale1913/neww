@@ -4,7 +4,12 @@ import useAuthStore from './store/authStore';
 
 // Pages
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminRegistrationMenu from './pages/AdminRegistrationMenu';
+import AdminStudentRegister from './pages/AdminStudentRegister';
+import AdminTeacherRegister from './pages/AdminTeacherRegister';
+import AdminStaffRegister from './pages/AdminStaffRegister';
 import AdminUserManagement from './pages/AdminUserManagement';
 import StudentUsersView from './pages/StudentUsersView';
 import TeacherUsersView from './pages/TeacherUsersView';
@@ -38,6 +43,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Admin Routes */}
         <Route
@@ -45,6 +51,38 @@ function App() {
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/registration"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminRegistrationMenu />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/register-student"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminStudentRegister />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/register-teacher"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminTeacherRegister />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/register-staff"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminStaffRegister />
             </ProtectedRoute>
           }
         />

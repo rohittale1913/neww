@@ -17,9 +17,19 @@ const StudentRegisterPage = () => {
     section: '',
     rollNumber: '',
     dateOfBirth: '',
+    gender: '',
+    parentName: '',
+    parentEmail: '',
     parentContact: '',
+    emergencyContact: '',
     address: '',
-    bloodGroup: ''
+    bloodGroup: '',
+    aadharNumber: '',
+    previousSchool: '',
+    admissionDate: new Date().toISOString().split('T')[0],
+    transportRequired: false,
+    category: '',
+    nationality: 'Indian'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -59,6 +69,38 @@ const StudentRegisterPage = () => {
     setLoading(true);
     setError('');
 
+    // Validate required fields
+    if (!studentData.gender) {
+      setError('Gender is required');
+      setLoading(false);
+      return;
+    }
+    if (!studentData.category) {
+      setError('Category is required');
+      setLoading(false);
+      return;
+    }
+    if (!studentData.parentName) {
+      setError('Parent/Guardian name is required');
+      setLoading(false);
+      return;
+    }
+    if (!studentData.parentEmail) {
+      setError('Parent/Guardian email is required');
+      setLoading(false);
+      return;
+    }
+    if (!studentData.emergencyContact) {
+      setError('Emergency contact is required');
+      setLoading(false);
+      return;
+    }
+    if (!studentData.dateOfBirth) {
+      setError('Date of birth is required');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await authAPI.register({
         ...userData,
@@ -69,7 +111,7 @@ const StudentRegisterPage = () => {
       setToken(response.data.token);
       setUser(response.data.user);
 
-      // Create student profile
+      // Create student profile with all required fields
       await studentAPI.create({
         ...studentData,
         userId: response.data.user.id
@@ -77,8 +119,15 @@ const StudentRegisterPage = () => {
 
       navigate('/student');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-      setStep(1);
+      let errorMsg = err.response?.data?.message || 'Registration failed';
+      
+      // Better error messages for common issues
+      if (errorMsg.includes('already exists')) {
+        errorMsg = 'This email is already registered. Please login or use a different email.';
+      }
+      
+      setError(errorMsg);
+      // Don't reset to step 1 - keep user on current form
     } finally {
       setLoading(false);
     }
@@ -170,6 +219,51 @@ const StudentRegisterPage = () => {
         ) : (
           <form onSubmit={handleFinalSubmit} className="space-y-4">
             <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Gender</label>
+              <select
+                name="gender"
+                value={studentData.gender}
+                onChange={handleStudentChange}
+                required
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Category</label>
+              <select
+                name="category"
+                value={studentData.category}
+                onChange={handleStudentChange}
+                required
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Select Category</option>
+                <option value="General">General</option>
+                <option value="OBC">OBC</option>
+                <option value="SC">SC</option>
+                <option value="ST">ST</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={studentData.dateOfBirth}
+                onChange={handleStudentChange}
+                required
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Class</label>
               <input
                 type="text"
@@ -212,13 +306,28 @@ const StudentRegisterPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Parent/Guardian Name</label>
               <input
-                type="date"
-                name="dateOfBirth"
-                value={studentData.dateOfBirth}
+                type="text"
+                name="parentName"
+                value={studentData.parentName}
                 onChange={handleStudentChange}
+                required
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Parent/Guardian name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Parent/Guardian Email</label>
+              <input
+                type="email"
+                name="parentEmail"
+                value={studentData.parentEmail}
+                onChange={handleStudentChange}
+                required
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="parent@email.com"
               />
             </div>
 
@@ -229,8 +338,22 @@ const StudentRegisterPage = () => {
                 name="parentContact"
                 value={studentData.parentContact}
                 onChange={handleStudentChange}
+                required
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="9876543210"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Contact</label>
+              <input
+                type="tel"
+                name="emergencyContact"
+                value={studentData.emergencyContact}
+                onChange={handleStudentChange}
+                required
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Emergency contact number"
               />
             </div>
 
@@ -240,6 +363,7 @@ const StudentRegisterPage = () => {
                 name="address"
                 value={studentData.address}
                 onChange={handleStudentChange}
+                required
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Enter full address"
                 rows="2"
@@ -264,6 +388,30 @@ const StudentRegisterPage = () => {
                 <option value="AB+">AB+</option>
                 <option value="AB-">AB-</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Aadhar Number (optional)</label>
+              <input
+                type="text"
+                name="aadharNumber"
+                value={studentData.aadharNumber}
+                onChange={handleStudentChange}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Aadhar number"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Previous School (optional)</label>
+              <input
+                type="text"
+                name="previousSchool"
+                value={studentData.previousSchool}
+                onChange={handleStudentChange}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Previous school name"
+              />
             </div>
 
             {error && <div className="text-rose-600 text-sm bg-rose-50 p-3 rounded border border-rose-200">{error}</div>}

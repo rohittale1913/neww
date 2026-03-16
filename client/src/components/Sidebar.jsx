@@ -8,7 +8,7 @@ const Sidebar = ({ isOpen }) => {
 
   const adminMenuItems = [
     { icon: <FiHome />, label: 'Dashboard', path: '/admin' },
-    { icon: <FiUsers />, label: 'Register Users', path: '/admin/users' },
+    { icon: <FiUsers />, label: 'User Registration', path: '/admin/registration' },
     { icon: <FiUsers />, label: 'View Students', path: '/admin/students-view' },
     { icon: <FiUsers />, label: 'View Teachers', path: '/admin/teachers-view' },
     { icon: <FiUsers />, label: 'View Staff', path: '/admin/staff-view' }

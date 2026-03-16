@@ -8,7 +8,15 @@ export const getAllLibrarians = async (req, res) => {
       .populate('userId', 'name email phone role')
       .lean()
       .sort({ createdAt: -1 });
-    res.json(librarians);
+    
+    // Ensure email and phone are populated from userId if not already set
+    const enrichedLibrarians = librarians.map(librarian => ({
+      ...librarian,
+      email: librarian.email || librarian.userId?.email || '-',
+      phone: librarian.phone || librarian.userId?.phone || '-'
+    }));
+    
+    res.json(enrichedLibrarians);
   } catch (error) {
     console.error('Error fetching librarians:', error);
     res.status(500).json({ message: 'Failed to fetch librarians', error: error.message });
@@ -24,7 +32,15 @@ export const getLibrarianById = async (req, res) => {
     if (!librarian) {
       return res.status(404).json({ message: 'Librarian not found' });
     }
-    res.json(librarian);
+    
+    // Ensure email and phone are populated from userId if not already set
+    const enrichedLibrarian = {
+      ...librarian,
+      email: librarian.email || librarian.userId?.email || '-',
+      phone: librarian.phone || librarian.userId?.phone || '-'
+    };
+    
+    res.json(enrichedLibrarian);
   } catch (error) {
     console.error('Error fetching librarian:', error);
     res.status(500).json({ message: error.message });
@@ -68,6 +84,8 @@ export const createLibrarian = async (req, res) => {
       librarianId,
       userId,
       name: user.name,
+      email: user.email,
+      phone: user.phone,
       qualification: qualification || '',
       experience: experience || 0,
       specialization: specialization || ''
@@ -101,27 +119,56 @@ export const createLibrarian = async (req, res) => {
 // Update librarian
 export const updateLibrarian = async (req, res) => {
   try {
-    const { qualification, experience, specialization, booksManaged, libraryArea } = req.body;
+    const { name, email, phone, qualification, experience, specialization, booksManaged, libraryArea, department } = req.body;
 
-    const librarian = await Librarian.findByIdAndUpdate(
-      req.params.id,
-      { 
-        qualification, 
-        experience, 
-        specialization,
-        booksManaged,
-        libraryArea,
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
-
+    // Find the librarian record
+    const librarian = await Librarian.findById(req.params.id);
     if (!librarian) {
       return res.status(404).json({ message: 'Librarian not found' });
     }
 
-    res.json({ message: 'Librarian updated successfully', librarian });
+    // Update the User record (name, email, phone)
+    if (librarian.userId) {
+      await User.findByIdAndUpdate(
+        librarian.userId,
+        { 
+          name: name || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
+          updatedAt: Date.now()
+        },
+        { new: true }
+      );
+    }
+
+    // Update the Librarian record
+    const updatedLibrarian = await Librarian.findByIdAndUpdate(
+      req.params.id,
+      { 
+        name: name || librarian.name,
+        qualification: qualification !== undefined ? qualification : librarian.qualification,
+        experience: experience !== undefined ? experience : librarian.experience,
+        specialization: specialization !== undefined ? specialization : librarian.specialization,
+        booksManaged: booksManaged !== undefined ? booksManaged : librarian.booksManaged,
+        libraryArea: libraryArea !== undefined ? libraryArea : librarian.libraryArea,
+        department: department !== undefined ? department : librarian.department,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    )
+    .populate('userId', 'name email phone role')
+    .lean();
+
+    // Enrich with user data
+    const enrichedLibrarian = {
+      ...updatedLibrarian,
+      email: updatedLibrarian?.email || email || '-',
+      phone: updatedLibrarian?.phone || phone || '-'
+    };
+
+    res.json({ message: 'Librarian updated successfully', librarian: enrichedLibrarian });
   } catch (error) {
+    console.error('Error updating librarian:', error);
     res.status(500).json({ message: error.message });
   }
 };

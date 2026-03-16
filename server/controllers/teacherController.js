@@ -34,7 +34,7 @@ export const getTeacherById = async (req, res) => {
 // Create new teacher
 export const createTeacher = async (req, res) => {
   try {
-    const { userId, qualification, experience, subjects, classes, isClassTeacher, classTeacherOf } = req.body;
+    const { userId, qualification, experience, subjects, classes, isClassTeacher, classTeacherOf, employmentType, dateOfBirth, gender, bloodGroup, address } = req.body;
 
     // Validate userId is provided
     if (!userId) {
@@ -72,8 +72,13 @@ export const createTeacher = async (req, res) => {
       classes: classes && classes.length ? classes : [],
       qualification: qualification || '',
       experience: experience || 0,
+      employmentType: employmentType || '',
       isClassTeacher: isClassTeacher || false,
-      classTeacherOf: classTeacherOf || ''
+      classTeacherOf: classTeacherOf || '',
+      dateOfBirth: dateOfBirth || null,
+      gender: gender || null,
+      bloodGroup: bloodGroup || null,
+      address: address || null
     });
 
     await teacher.save();
@@ -104,30 +109,62 @@ export const createTeacher = async (req, res) => {
 // Update teacher
 export const updateTeacher = async (req, res) => {
   try {
-    const { name, phone, email, qualification, experience, salary, subjects, classes } = req.body;
+    const { name, email, phone, qualification, experience, subjects, classes, isClassTeacher, classTeacherOf, employmentType, gender, dateOfBirth, bloodGroup, address, joiningDate } = req.body;
 
-    const teacher = await Teacher.findByIdAndUpdate(
-      req.params.id,
-      { 
-        name, 
-        phone, 
-        email, 
-        qualification, 
-        experience, 
-        salary, 
-        subjects, 
-        classes,
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
-
+    // Find the teacher record
+    const teacher = await Teacher.findById(req.params.id);
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
 
-    res.json({ message: 'Teacher updated successfully', teacher });
+    // Update the User record (name, email, phone)
+    if (teacher.userId) {
+      await User.findByIdAndUpdate(
+        teacher.userId,
+        { 
+          name: name || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
+          updatedAt: Date.now()
+        },
+        { new: true }
+      );
+    }
+
+    // Update the Teacher record
+    const updatedTeacher = await Teacher.findByIdAndUpdate(
+      req.params.id,
+      { 
+        name: name || teacher.name,
+        qualification: qualification !== undefined ? qualification : teacher.qualification,
+        experience: experience !== undefined ? experience : teacher.experience,
+        subjects: subjects !== undefined ? subjects : teacher.subjects,
+        classes: classes !== undefined ? classes : teacher.classes,
+        isClassTeacher: isClassTeacher !== undefined ? isClassTeacher : teacher.isClassTeacher,
+        classTeacherOf: classTeacherOf !== undefined ? classTeacherOf : teacher.classTeacherOf,
+        employmentType: employmentType !== undefined ? employmentType : teacher.employmentType,
+        gender: gender !== undefined ? gender : teacher.gender,
+        dateOfBirth: dateOfBirth !== undefined ? dateOfBirth : teacher.dateOfBirth,
+        bloodGroup: bloodGroup !== undefined ? bloodGroup : teacher.bloodGroup,
+        address: address !== undefined ? address : teacher.address,
+        joiningDate: joiningDate !== undefined ? joiningDate : teacher.joiningDate,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    )
+    .populate('userId', 'name email phone role')
+    .lean();
+
+    // Enrich with user data
+    const enrichedTeacher = {
+      ...updatedTeacher,
+      email: updatedTeacher?.email || email || '-',
+      phone: updatedTeacher?.phone || phone || '-'
+    };
+
+    res.json({ message: 'Teacher updated successfully', teacher: enrichedTeacher });
   } catch (error) {
+    console.error('Error updating teacher:', error);
     res.status(500).json({ message: error.message });
   }
 };

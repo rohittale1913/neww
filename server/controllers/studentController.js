@@ -34,7 +34,23 @@ export const getStudentById = async (req, res) => {
 // Create new student
 export const createStudent = async (req, res) => {
   try {
-    const { userId, class: className, section, rollNumber, dateOfBirth, parentContact, address, bloodGroup } = req.body;
+    const { 
+      userId, 
+      class: className, 
+      section, 
+      rollNumber, 
+      dateOfBirth, 
+      gender,
+      parentName,
+      parentEmail,
+      parentContact, 
+      emergencyContact,
+      address, 
+      bloodGroup,
+      category,
+      aadharNumber,
+      previousSchool
+    } = req.body;
 
     // Validate required fields
     if (!userId) {
@@ -48,6 +64,30 @@ export const createStudent = async (req, res) => {
     }
     if (!rollNumber) {
       return res.status(400).json({ message: 'rollNumber is required' });
+    }
+    if (!gender) {
+      return res.status(400).json({ message: 'gender is required' });
+    }
+    if (!parentName) {
+      return res.status(400).json({ message: 'parentName is required' });
+    }
+    if (!parentEmail) {
+      return res.status(400).json({ message: 'parentEmail is required' });
+    }
+    if (!parentContact) {
+      return res.status(400).json({ message: 'parentContact is required' });
+    }
+    if (!emergencyContact) {
+      return res.status(400).json({ message: 'emergencyContact is required' });
+    }
+    if (!address) {
+      return res.status(400).json({ message: 'address is required' });
+    }
+    if (!category) {
+      return res.status(400).json({ message: 'category is required' });
+    }
+    if (!dateOfBirth) {
+      return res.status(400).json({ message: 'dateOfBirth is required' });
     }
 
     // Fetch user to get name
@@ -72,7 +112,7 @@ export const createStudent = async (req, res) => {
       return res.status(500).json({ message: 'Failed to generate unique student ID after multiple attempts' });
     }
 
-    // Create student
+    // Create student with all required fields
     const student = new Student({
       studentId,
       userId,
@@ -80,10 +120,17 @@ export const createStudent = async (req, res) => {
       class: className,
       section,
       rollNumber: parseInt(rollNumber),
+      gender,
       dateOfBirth,
+      parentName,
+      parentEmail,
       parentContact,
+      emergencyContact,
       address,
-      bloodGroup
+      bloodGroup: bloodGroup || null,
+      category,
+      aadharNumber: aadharNumber || null,
+      previousSchool: previousSchool || null
     });
 
     await student.save();
@@ -114,30 +161,67 @@ export const createStudent = async (req, res) => {
 // Update student
 export const updateStudent = async (req, res) => {
   try {
-    const { name, class: className, section, rollNumber, dateOfBirth, parentContact, address, phone } = req.body;
+    const { name, email, phone, class: className, section, rollNumber, gender, dateOfBirth, bloodGroup, category, nationality, parentName, parentEmail, parentContact, emergencyContact, address, aadharNumber, admissionDate, previousSchool, transportRequired } = req.body;
 
-    const student = await Student.findByIdAndUpdate(
-      req.params.id,
-      { 
-        name, 
-        class: className, 
-        section, 
-        rollNumber, 
-        dateOfBirth, 
-        parentContact, 
-        address, 
-        phone,
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
-
+    // Find the student record
+    const student = await Student.findById(req.params.id);
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
     }
 
-    res.json({ message: 'Student updated successfully', student });
+    // Update the User record (name, email, phone)
+    if (student.userId) {
+      await User.findByIdAndUpdate(
+        student.userId,
+        { 
+          name: name || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
+          updatedAt: Date.now()
+        },
+        { new: true }
+      );
+    }
+
+    // Update the Student record
+    const updatedStudent = await Student.findByIdAndUpdate(
+      req.params.id,
+      { 
+        name: name || student.name,
+        class: className !== undefined ? className : student.class,
+        section: section !== undefined ? section : student.section,
+        rollNumber: rollNumber !== undefined ? rollNumber : student.rollNumber,
+        gender: gender !== undefined ? gender : student.gender,
+        dateOfBirth: dateOfBirth !== undefined ? dateOfBirth : student.dateOfBirth,
+        bloodGroup: bloodGroup !== undefined ? bloodGroup : student.bloodGroup,
+        category: category !== undefined ? category : student.category,
+        nationality: nationality !== undefined ? nationality : student.nationality,
+        parentName: parentName !== undefined ? parentName : student.parentName,
+        parentEmail: parentEmail !== undefined ? parentEmail : student.parentEmail,
+        parentContact: parentContact !== undefined ? parentContact : student.parentContact,
+        emergencyContact: emergencyContact !== undefined ? emergencyContact : student.emergencyContact,
+        address: address !== undefined ? address : student.address,
+        aadharNumber: aadharNumber !== undefined ? aadharNumber : student.aadharNumber,
+        admissionDate: admissionDate !== undefined ? admissionDate : student.admissionDate,
+        previousSchool: previousSchool !== undefined ? previousSchool : student.previousSchool,
+        transportRequired: transportRequired !== undefined ? transportRequired : student.transportRequired,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    )
+    .populate('userId', 'name email phone role')
+    .lean();
+
+    // Enrich with user data
+    const enrichedStudent = {
+      ...updatedStudent,
+      email: updatedStudent?.email || email || '-',
+      phone: updatedStudent?.phone || phone || '-'
+    };
+
+    res.json({ message: 'Student updated successfully', student: enrichedStudent });
   } catch (error) {
+    console.error('Error updating student:', error);
     res.status(500).json({ message: error.message });
   }
 };

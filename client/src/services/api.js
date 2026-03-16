@@ -18,6 +18,44 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Add retry logic for rate-limited requests (429 errors)
+let retryCount = {};
+const MAX_RETRIES = 5;
+const MAX_RETRY_DELAY = 10000; // 10 seconds max
+
+api.interceptors.response.use(
+  response => response,
+  async error => {
+    const config = error.config;
+
+    // Handle 429 (Too Many Requests) with exponential backoff
+    if (error.response?.status === 429) {
+      const url = config.url;
+      retryCount[url] = (retryCount[url] || 0) + 1;
+
+      if (retryCount[url] <= MAX_RETRIES) {
+        // Exponential backoff with max limit: 1s, 2s, 4s, 8s, 10s, 10s
+        const delay = Math.min(Math.pow(2, retryCount[url] - 1) * 1000, MAX_RETRY_DELAY);
+        console.warn(`Rate limited (429). Attempt ${retryCount[url]}/${MAX_RETRIES}. Retrying in ${delay}ms...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return api(config);
+      } else {
+        console.error(`Max retries (${MAX_RETRIES}) exceeded for rate-limited request: ${url}`);
+        delete retryCount[url];
+        return Promise.reject(new Error(`Rate limit exceeded after ${MAX_RETRIES} retries`));
+      }
+    }
+
+    // Reset retry count on success or other errors
+    if (error.config?.url) {
+      delete retryCount[error.config.url];
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 // Auth APIs
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),

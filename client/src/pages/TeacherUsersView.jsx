@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { authAPI, teacherAPI } from '../services/api';
 import { FiTrash2 } from 'react-icons/fi';
+import TeacherProfileModal from '../components/TeacherProfileModal';
+import EditTeacherModal from '../components/EditTeacherModal';
 
 const TeacherUsersView = () => {
   const [teachers, setTeachers] = useState([]);
@@ -10,6 +12,8 @@ const TeacherUsersView = () => {
   const [success, setSuccess] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [editingTeacher, setEditingTeacher] = useState(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -83,6 +87,39 @@ const TeacherUsersView = () => {
     }
   };
 
+  const handleViewProfile = async (teacher) => {
+    try {
+      const response = await teacherAPI.getAll?.() || { data: [] };
+      const profiles = response.data || [];
+      const fullProfile = profiles.find(p => 
+        p.userId === teacher._id || p.userId?.id === teacher._id || p.userId?._id === teacher._id
+      );
+      
+      if (fullProfile) {
+        setSelectedTeacher({
+          ...teacher,
+          ...fullProfile,
+          email: teacher.email,
+          phone: teacher.phone,
+          isActive: teacher.isActive
+        });
+      } else {
+        setSelectedTeacher(teacher);
+      }
+    } catch (err) {
+      console.error('Failed to fetch full teacher profile:', err);
+      setSelectedTeacher(teacher);
+    }
+  };
+
+  const handleEditSave = (updatedTeacher) => {
+    setSuccess('Teacher profile updated successfully');
+    setEditingTeacher(null);
+    // Refresh the teachers list
+    fetchTeachers();
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -92,8 +129,13 @@ const TeacherUsersView = () => {
   };
 
   const filteredTeachers = teachers.filter(teacher => {
-    const matchName = teacher.name.toLowerCase().includes(filters.searchName.toLowerCase());
-    const matchEmail = teacher.email.toLowerCase().includes(filters.searchEmail.toLowerCase());
+    const teacherName = (teacher.name || '').toLowerCase();
+    const teacherEmail = (teacher.email || '').toLowerCase();
+    const searchName = filters.searchName.toLowerCase();
+    const searchEmail = filters.searchEmail.toLowerCase();
+    
+    const matchName = !searchName || teacherName.includes(searchName);
+    const matchEmail = !searchEmail || teacherEmail.includes(searchEmail);
     const matchEmployment = !filters.employmentType || teacher.employmentType === filters.employmentType;
     const matchClassTeacher = !filters.isClassTeacher || 
       (filters.isClassTeacher === 'yes' ? teacher.isClassTeacher : !teacher.isClassTeacher);
@@ -106,8 +148,8 @@ const TeacherUsersView = () => {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-slate-900">Teacher Users 👨‍🏫</h1>
-          <p className="text-slate-600 text-sm mt-2">View and manage all registered teachers in the system</p>
+          <h1 className="text-4xl font-bold text-slate-900">Teacher Users </h1>
+          {/* <p className="text-slate-600 text-sm mt-2">View and manage all registered teachers in the system</p> */}
         </div>
 
         {/* Filters */}
@@ -204,7 +246,14 @@ const TeacherUsersView = () => {
                         idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                       } hover:bg-purple-50`}
                     >
-                      <td className="py-3 px-4 font-medium text-gray-900">{teacher.name}</td>
+                      <td className="py-3 px-4 font-medium text-gray-900">
+                        <button
+                          onClick={() => handleViewProfile(teacher)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline transition"
+                        >
+                          {teacher.name}
+                        </button>
+                      </td>
                       <td className="py-3 px-4 text-gray-600">{teacher.email}</td>
                       <td className="py-3 px-4 text-gray-600">{teacher.qualification || '-'}</td>
                       <td className="py-3 px-4 text-gray-600 text-xs">
@@ -281,6 +330,20 @@ const TeacherUsersView = () => {
             </div>
           </div>
         )}
+
+        {/* Teacher Profile Modal */}
+        <TeacherProfileModal 
+          teacher={selectedTeacher} 
+          onClose={() => setSelectedTeacher(null)}
+          onEdit={() => setEditingTeacher(selectedTeacher)}
+        />
+
+        {/* Edit Teacher Modal */}
+        <EditTeacherModal
+          teacher={editingTeacher}
+          onClose={() => setEditingTeacher(null)}
+          onSave={handleEditSave}
+        />
       </div>
     </DashboardLayout>
   );
