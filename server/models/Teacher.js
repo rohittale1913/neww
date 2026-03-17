@@ -13,10 +13,6 @@ const teacherSchema = new mongoose.Schema({
   employmentType: { type: String, enum: ['full-time', 'part-time', 'contractual'] },
   isClassTeacher: { type: Boolean, default: false },
   classTeacherOf: String,
-  dateOfBirth: Date,
-  gender: String,
-  bloodGroup: String,
-  address: String,
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

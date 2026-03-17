@@ -205,4 +205,36 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-export default { register, login, logout, getCurrentUser, updateProfile, getAllUsers, deleteUser };
+// Reset Password - For admin password recovery
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and new password are required' });
+    }
+
+    // Validate new password
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update password - will be hashed by pre-save middleware
+    user.password = newPassword;
+    user.updatedAt = Date.now();
+    await user.save();
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export default { register, login, logout, getCurrentUser, updateProfile, getAllUsers, deleteUser, resetPassword };

@@ -104,21 +104,23 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Name</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Gender</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Gender <span className="text-red-500">*</span></label>
                 <select
                   name="gender"
                   value={formData.gender || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Gender</option>
@@ -128,12 +130,13 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   name="dateOfBirth"
                   value={formData.dateOfBirth ? formData.dateOfBirth.split('T')[0] : ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -157,22 +160,24 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Category</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Category <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="category"
                   value={formData.category || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Nationality</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Nationality <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="nationality"
                   value={formData.nationality || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -186,11 +191,12 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Class</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Class <span className="text-red-500">*</span></label>
                 <select
                   name="class"
                   value={formData.class || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Class</option>
@@ -201,11 +207,12 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Section</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Section <span className="text-red-500">*</span></label>
                 <select
                   name="section"
                   value={formData.section || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Section</option>
@@ -216,12 +223,13 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Roll Number</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Roll Number <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="rollNumber"
                   value={formData.rollNumber || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -255,42 +263,46 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Name</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="parentName"
                   value={formData.parentName || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Email <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   name="parentEmail"
                   value={formData.parentEmail || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Contact Number</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Contact Number <span className="text-red-500">*</span></label>
                 <input
                   type="tel"
                   name="parentContact"
                   value={formData.parentContact || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Contact</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Contact <span className="text-red-500">*</span></label>
                 <input
                   type="tel"
                   name="emergencyContact"
                   value={formData.emergencyContact || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -304,22 +316,24 @@ const EditStudentModal = ({ student, onClose, onSave }) => {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Address</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Address <span className="text-red-500">*</span></label>
                 <textarea
                   name="address"
                   value={formData.address || ''}
                   onChange={handleInputChange}
+                  required
                   rows="3"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Aadhar Number</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Aadhar Number <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="aadharNumber"
                   value={formData.aadharNumber || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

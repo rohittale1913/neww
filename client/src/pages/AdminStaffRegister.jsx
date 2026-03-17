@@ -166,6 +166,7 @@ const AdminStaffRegister = () => {
                     name="phone"
                     value={staffData.phone}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="9876543210"
                   />
@@ -185,7 +186,7 @@ const AdminStaffRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password <span className="text-red-500">*</span></label>
                   <input
                     type="password"
                     name="confirmPassword"
@@ -205,12 +206,13 @@ const AdminStaffRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth <span className="text-red-500">*</span> </label>
                   <input
                     type="date"
                     name="dateOfBirth"
                     value={staffData.dateOfBirth}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
@@ -221,6 +223,7 @@ const AdminStaffRegister = () => {
                     name="gender"
                     value={staffData.gender}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select Gender</option>
@@ -251,12 +254,13 @@ const AdminStaffRegister = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Address</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Address <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="address"
                     value={staffData.address}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Full address"
                   />
@@ -275,6 +279,7 @@ const AdminStaffRegister = () => {
                     name="qualification"
                     value={staffData.qualification}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select Qualification</option>
@@ -308,12 +313,13 @@ const AdminStaffRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Years of Experience</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Years of Experience  <span className="text-red-500">*</span></label>
                   <input
                     type="number"
                     name="experience"
                     value={staffData.experience}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="5"
                   />
@@ -351,24 +357,26 @@ const AdminStaffRegister = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Bank Account Number</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Bank Account Number <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       name="bankAccount"
                       value={staffData.bankAccount}
                       onChange={handleChange}
+                      required
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="1234567890123456"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">IFSC Code</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">IFSC Code <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       name="ifscCode"
                       value={staffData.ifscCode}
                       onChange={handleChange}
+                      required
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="SBIN0001234"
                     />

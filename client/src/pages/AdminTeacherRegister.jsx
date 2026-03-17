@@ -282,12 +282,13 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Years of Experience</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Years of Experience  <span className="text-red-500">*</span></label>
                   <input
                     type="number"
                     name="experience"
                     value={teacherData.experience}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="10"
                   />

@@ -106,7 +106,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Name</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="name"
@@ -116,7 +116,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Gender</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Gender <span className="text-red-500">*</span></label>
                 <select
                   name="gender"
                   value={formData.gender || ''}
@@ -130,7 +130,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   name="dateOfBirth"
@@ -168,7 +168,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Qualification</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Qualification <span className="text-red-500">*</span></label>
                 <select
                   name="qualification"
                   value={formData.qualification || ''}
@@ -193,12 +193,13 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Experience (Years)</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Experience (Years) <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   name="experience"
                   value={formData.experience || ''}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -232,7 +233,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
           {/* Subjects */}
           <div>
             <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">
-              Subjects
+              Subjects <span className="text-red-500">*</span>
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 border border-slate-300 rounded-lg bg-slate-50">
               {['Mathematics', 'Science', 'English', 'History', 'Geography', 'Computer Science', 'Physical Education', 'Art', 'Music', 'Social Science', 'Biology', 'Chemistry', 'Physics', 'Economics', 'Business Studies', 'Hindi', 'Sanskrit'].map(subject => (
@@ -258,7 +259,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
           {/* Classes */}
           <div>
             <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">
-              Classes Assigned
+              Classes Assigned <span className="text-red-500">*</span>
             </h3>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3 p-4 border border-slate-300 rounded-lg bg-slate-50">
               {['1-A', '1-B', '2-A', '2-B', '3-A', '3-B', '4-A', '4-B', '5-A', '5-B', '6-A', '6-B', '7-A', '7-B', '8-A', '8-B', '9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A', '12-B'].map(cls => (

@@ -173,6 +173,7 @@ const AdminStudentRegister = () => {
                     name="phone"
                     value={studentData.phone}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="9876543210"
                   />
@@ -228,7 +229,7 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth <span className="text-red-500">*</span></label>
                   <input
                     type="date"
                     name="dateOfBirth"
@@ -260,35 +261,38 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Aadhar/ID Number</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Aadhar/ID Number <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="aadharNumber"
                     value={studentData.aadharNumber}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Enter Aadhar or ID number"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Nationality</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Nationality <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="nationality"
                     value={studentData.nationality}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Indian"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Category</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Category <span className="text-red-500">*</span></label>
                   <select
                     name="category"
                     value={studentData.category}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select Category</option>
@@ -307,7 +311,7 @@ const AdminStudentRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Class</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Class <span className="text-red-500">*</span></label>
                   <select
                     name="class"
                     value={studentData.class}
@@ -332,7 +336,7 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Section</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Section <span className="text-red-500">*</span></label>
                   <select
                     name="section"
                     value={studentData.section}
@@ -349,7 +353,7 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Roll Number</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Roll Number <span className="text-red-500">*</span></label>
                   <input
                     type="number"
                     name="rollNumber"
@@ -404,7 +408,7 @@ const AdminStudentRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent/Guardian Name</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent/Guardian Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="parentName"
@@ -417,19 +421,20 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent Email</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent Email <span className="text-red-500">*</span></label>
                   <input
                     type="email"
                     name="parentEmail"
                     value={studentData.parentEmail}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="parent@email.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent Contact</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Parent Contact <span className="text-red-500">*</span></label>
                   <input
                     type="tel"
                     name="parentContact"
@@ -442,12 +447,13 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Contact</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Contact <span className="text-red-500">*</span></label>
                   <input
                     type="tel"
                     name="emergencyContact"
                     value={studentData.emergencyContact}
                     onChange={handleChange}
+                    required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Emergency contact number"
                   />
@@ -457,7 +463,7 @@ const AdminStudentRegister = () => {
 
             {/* Address */}
             <div>
-              <h2 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">Address</h2>
+              <h2 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">Address <span className="text-red-500">*</span></h2>
               
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Full Address</label>
