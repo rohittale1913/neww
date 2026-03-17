@@ -141,7 +141,7 @@ const AdminStudentRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="name"
@@ -154,7 +154,7 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Email <span className="text-red-500">*</span></label>
                   <input
                     type="email"
                     name="email"
@@ -167,7 +167,7 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number <span className="text-red-500">*</span></label>
                   <input
                     type="tel"
                     name="phone"
@@ -179,7 +179,7 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Password <span className="text-red-500">*</span></label>
                   <input
                     type="password"
                     name="password"
@@ -192,7 +192,7 @@ const AdminStudentRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password <span className="text-red-500">*</span></label>
                   <input
                     type="password"
                     name="confirmPassword"
@@ -212,7 +212,7 @@ const AdminStudentRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Gender</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Gender <span className="text-red-500">*</span></label>
                   <select
                     name="gender"
                     value={studentData.gender}
@@ -308,15 +308,27 @@ const AdminStudentRegister = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Class</label>
-                  <input
-                    type="text"
+                  <select
                     name="class"
                     value={studentData.class}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="e.g., 10"
-                  />
+                  >
+                    <option value="">Select Class</option>
+                    <option value="1">Class 1</option>
+                    <option value="2">Class 2</option>
+                    <option value="3">Class 3</option>
+                    <option value="4">Class 4</option>
+                    <option value="5">Class 5</option>
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10">Class 10</option>
+                    <option value="11">Class 11</option>
+                    <option value="12">Class 12</option>
+                  </select>
                 </div>
 
                 <div>

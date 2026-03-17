@@ -25,20 +25,6 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
     }));
   };
 
-  const handleSubjectChange = (e) => {
-    const { value, checked } = e.target;
-    setSubjects(prev =>
-      checked ? [...prev, value] : prev.filter(s => s !== value)
-    );
-  };
-
-  const handleClassChange = (e) => {
-    const value = e.target.value;
-    setClasses(prev =>
-      prev.includes(value) ? prev.filter(c => c !== value) : [...prev, value]
-    );
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -183,13 +169,28 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Qualification</label>
-                <input
-                  type="text"
+                <select
                   name="qualification"
                   value={formData.qualification || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+                >
+                  <option value="">Select Qualification</option>
+                  <option value="D.El.Ed">D.El.Ed (Diploma in Elementary Education)</option>
+                  <option value="B.A">B.A (Bachelor of Arts)</option>
+                  <option value="B.Sc">B.Sc (Bachelor of Science)</option>
+                  <option value="B.Com">B.Com (Bachelor of Commerce)</option>
+                  <option value="B.Tech">B.Tech (Bachelor of Technology)</option>
+                  <option value="B.P.Ed">B.P.Ed (Bachelor of Physical Education)</option>
+                  <option value="B.Ed">B.Ed (Bachelor of Education)</option>
+                  <option value="M.A">M.A (Master of Arts)</option>
+                  <option value="M.Sc">M.Sc (Master of Science)</option>
+                  <option value="M.Com">M.Com (Master of Commerce)</option>
+                  <option value="M.Tech">M.Tech (Master of Technology)</option>
+                  <option value="M.Ed">M.Ed (Master of Education)</option>
+                  <option value="M.B.A">M.B.A (Master of Business Administration)</option>
+                  <option value="Ph.D">Ph.D (Doctor of Philosophy)</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Experience (Years)</label>
@@ -233,15 +234,20 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
             <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">
               Subjects
             </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {subjectsList.map(subject => (
-                <label key={subject} className="flex items-center gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 border border-slate-300 rounded-lg bg-slate-50">
+              {['Mathematics', 'Science', 'English', 'History', 'Geography', 'Computer Science', 'Physical Education', 'Art', 'Music', 'Social Science', 'Biology', 'Chemistry', 'Physics', 'Economics', 'Business Studies', 'Hindi', 'Sanskrit'].map(subject => (
+                <label key={subject} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    value={subject}
                     checked={subjects.includes(subject)}
-                    onChange={handleSubjectChange}
-                    className="w-4 h-4 rounded"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSubjects([...subjects, subject]);
+                      } else {
+                        setSubjects(subjects.filter(s => s !== subject));
+                      }
+                    }}
+                    className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
                   />
                   <span className="text-sm text-slate-700">{subject}</span>
                 </label>
@@ -254,17 +260,22 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
             <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">
               Classes Assigned
             </h3>
-            <div className="grid grid-cols-4 gap-3">
-              {classOptions.map(cls => (
-                <label key={cls} className="flex items-center gap-2">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 p-4 border border-slate-300 rounded-lg bg-slate-50">
+              {['1-A', '1-B', '2-A', '2-B', '3-A', '3-B', '4-A', '4-B', '5-A', '5-B', '6-A', '6-B', '7-A', '7-B', '8-A', '8-B', '9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A', '12-B'].map(cls => (
+                <label key={cls} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    value={cls}
                     checked={classes.includes(cls)}
-                    onChange={handleClassChange}
-                    className="w-4 h-4 rounded"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setClasses([...classes, cls]);
+                      } else {
+                        setClasses(classes.filter(c => c !== cls));
+                      }
+                    }}
+                    className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
                   />
-                  <span className="text-sm text-slate-700">Class {cls}</span>
+                  <span className="text-sm text-slate-700 font-medium">{cls}</span>
                 </label>
               ))}
             </div>
@@ -289,14 +300,38 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
               {formData.isClassTeacher && (
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Class Teacher Of</label>
-                  <input
-                    type="text"
+                  <select
                     name="classTeacherOf"
                     value={formData.classTeacherOf || ''}
                     onChange={handleInputChange}
-                    placeholder="e.g., 10-A"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                  >
+                    <option value="">Select Class</option>
+                    <option value="1-A">1-A</option>
+                    <option value="1-B">1-B</option>
+                    <option value="2-A">2-A</option>
+                    <option value="2-B">2-B</option>
+                    <option value="3-A">3-A</option>
+                    <option value="3-B">3-B</option>
+                    <option value="4-A">4-A</option>
+                    <option value="4-B">4-B</option>
+                    <option value="5-A">5-A</option>
+                    <option value="5-B">5-B</option>
+                    <option value="6-A">6-A</option>
+                    <option value="6-B">6-B</option>
+                    <option value="7-A">7-A</option>
+                    <option value="7-B">7-B</option>
+                    <option value="8-A">8-A</option>
+                    <option value="8-B">8-B</option>
+                    <option value="9-A">9-A</option>
+                    <option value="9-B">9-B</option>
+                    <option value="10-A">10-A</option>
+                    <option value="10-B">10-B</option>
+                    <option value="11-A">11-A</option>
+                    <option value="11-B">11-B</option>
+                    <option value="12-A">12-A</option>
+                    <option value="12-B">12-B</option>
+                  </select>
                 </div>
               )}
             </div>

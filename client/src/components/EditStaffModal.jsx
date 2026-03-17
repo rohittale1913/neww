@@ -151,13 +151,28 @@ const EditStaffModal = ({ staff, role, onClose, onSave }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Qualification</label>
-                <input
-                  type="text"
+                <select
                   name="qualification"
                   value={formData.qualification || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                >
+                  <option value="">Select Qualification</option>
+                  <option value="D.El.Ed">D.El.Ed (Diploma in Elementary Education)</option>
+                  <option value="B.A">B.A (Bachelor of Arts)</option>
+                  <option value="B.Sc">B.Sc (Bachelor of Science)</option>
+                  <option value="B.Com">B.Com (Bachelor of Commerce)</option>
+                  <option value="B.Tech">B.Tech (Bachelor of Technology)</option>
+                  <option value="B.P.Ed">B.P.Ed (Bachelor of Physical Education)</option>
+                  <option value="B.Ed">B.Ed (Bachelor of Education)</option>
+                  <option value="M.A">M.A (Master of Arts)</option>
+                  <option value="M.Sc">M.Sc (Master of Science)</option>
+                  <option value="M.Com">M.Com (Master of Commerce)</option>
+                  <option value="M.Tech">M.Tech (Master of Technology)</option>
+                  <option value="M.Ed">M.Ed (Master of Education)</option>
+                  <option value="M.B.A">M.B.A (Master of Business Administration)</option>
+                  <option value="Ph.D">Ph.D (Doctor of Philosophy)</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Experience (Years)</label>

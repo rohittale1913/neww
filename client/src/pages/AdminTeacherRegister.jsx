@@ -11,8 +11,8 @@ const AdminTeacherRegister = () => {
     password: '',
     confirmPassword: '',
     qualification: '',
-    subjects: '',
-    classes: '',
+    subjects: [],
+    classes: [],
     experience: '',
     employmentType: 'full-time',
     isClassTeacher: false,
@@ -32,6 +32,24 @@ const AdminTeacherRegister = () => {
     setTeacherData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubjectChange = (subject) => {
+    setTeacherData(prev => ({
+      ...prev,
+      subjects: prev.subjects.includes(subject)
+        ? prev.subjects.filter(s => s !== subject)
+        : [...prev.subjects, subject]
+    }));
+  };
+
+  const handleClassChange = (cls) => {
+    setTeacherData(prev => ({
+      ...prev,
+      classes: prev.classes.includes(cls)
+        ? prev.classes.filter(c => c !== cls)
+        : [...prev.classes, cls]
     }));
   };
 
@@ -60,8 +78,8 @@ const AdminTeacherRegister = () => {
       // Create teacher profile
       await teacherAPI.create({
         qualification: teacherData.qualification,
-        subjects: teacherData.subjects.split(',').map(s => s.trim()),
-        classes: teacherData.classes.split(',').map(c => c.trim()),
+        subjects: teacherData.subjects,
+        classes: teacherData.classes,
         experience: parseInt(teacherData.experience) || 0,
         employmentType: teacherData.employmentType,
         isClassTeacher: teacherData.isClassTeacher,
@@ -101,7 +119,7 @@ const AdminTeacherRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="name"
@@ -114,7 +132,7 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Email <span className="text-red-500">*</span></label>
                   <input
                     type="email"
                     name="email"
@@ -127,7 +145,7 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number <span className="text-red-500">*</span></label>
                   <input
                     type="tel"
                     name="phone"
@@ -139,7 +157,7 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Password <span className="text-red-500">*</span></label>
                   <input
                     type="password"
                     name="password"
@@ -152,7 +170,7 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password <span className="text-red-500">*</span></label>
                   <input
                     type="password"
                     name="confirmPassword"
@@ -172,7 +190,7 @@ const AdminTeacherRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Date of Birth <span className="text-red-500">*</span></label>
                   <input
                     type="date"
                     name="dateOfBirth"
@@ -183,7 +201,7 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Gender</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Gender <span className="text-red-500">*</span></label>
                   <select
                     name="gender"
                     value={teacherData.gender}
@@ -237,16 +255,30 @@ const AdminTeacherRegister = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Qualification</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Qualification <span className="text-red-500">*</span></label>
+                  <select
                     name="qualification"
                     value={teacherData.qualification}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="B.Sc, M.A, B.Ed, etc."
-                  />
+                  >
+                    <option value="">Select Qualification</option>
+                    <option value="D.El.Ed">D.El.Ed (Diploma in Elementary Education)</option>
+                    <option value="B.A">B.A (Bachelor of Arts)</option>
+                    <option value="B.Sc">B.Sc (Bachelor of Science)</option>
+                    <option value="B.Com">B.Com (Bachelor of Commerce)</option>
+                    <option value="B.Tech">B.Tech (Bachelor of Technology)</option>
+                    <option value="B.P.Ed">B.P.Ed (Bachelor of Physical Education)</option>
+                    <option value="B.Ed">B.Ed (Bachelor of Education)</option>
+                    <option value="M.A">M.A (Master of Arts)</option>
+                    <option value="M.Sc">M.Sc (Master of Science)</option>
+                    <option value="M.Com">M.Com (Master of Commerce)</option>
+                    <option value="M.Tech">M.Tech (Master of Technology)</option>
+                    <option value="M.Ed">M.Ed (Master of Education)</option>
+                    <option value="M.B.A">M.B.A (Master of Business Administration)</option>
+                    <option value="Ph.D">Ph.D (Doctor of Philosophy)</option>
+                  </select>
                 </div>
 
                 <div>
@@ -261,30 +293,44 @@ const AdminTeacherRegister = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Subjects (comma separated)</label>
-                  <input
-                    type="text"
-                    name="subjects"
-                    value={teacherData.subjects}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Mathematics, Science, English"
-                  />
+                <div className="col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Subjects <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 border border-slate-300 rounded-lg bg-slate-50">
+                    {['Mathematics', 'Science', 'English', 'History', 'Geography', 'Computer Science', 'Physical Education', 'Art', 'Music', 'Social Science', 'Biology', 'Chemistry', 'Physics', 'Economics', 'Business Studies', 'Hindi', 'Sanskrit'].map(subject => (
+                      <label key={subject} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={teacherData.subjects.includes(subject)}
+                          onChange={() => handleSubjectChange(subject)}
+                          className="w-4 h-4 text-primary rounded focus:ring-2 focus:ring-primary"
+                        />
+                        <span className="text-sm text-slate-700">{subject}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {teacherData.subjects.length === 0 && (
+                    <p className="text-sm text-red-600 mt-2">Please select at least one subject</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Classes (comma separated)</label>
-                  <input
-                    type="text"
-                    name="classes"
-                    value={teacherData.classes}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="10-A, 10-B, 9-A"
-                  />
+                <div className="col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Classes <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3 p-4 border border-slate-300 rounded-lg bg-slate-50">
+                    {['1-A', '1-B', '2-A', '2-B', '3-A', '3-B', '4-A', '4-B', '5-A', '5-B', '6-A', '6-B', '7-A', '7-B', '8-A', '8-B', '9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A', '12-B'].map(cls => (
+                      <label key={cls} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={teacherData.classes.includes(cls)}
+                          onChange={() => handleClassChange(cls)}
+                          className="w-4 h-4 text-primary rounded focus:ring-2 focus:ring-primary"
+                        />
+                        <span className="text-sm text-slate-700 font-medium">{cls}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {teacherData.classes.length === 0 && (
+                    <p className="text-sm text-red-600 mt-2">Please select at least one class</p>
+                  )}
                 </div>
 
                 <div>
@@ -303,14 +349,38 @@ const AdminTeacherRegister = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Class Teacher Of</label>
-                  <input
-                    type="text"
+                  <select
                     name="classTeacherOf"
                     value={teacherData.classTeacherOf}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="10-A (if applicable)"
-                  />
+                  >
+                    <option value="">Select Class (if applicable)</option>
+                    <option value="1-A">1-A</option>
+                    <option value="1-B">1-B</option>
+                    <option value="2-A">2-A</option>
+                    <option value="2-B">2-B</option>
+                    <option value="3-A">3-A</option>
+                    <option value="3-B">3-B</option>
+                    <option value="4-A">4-A</option>
+                    <option value="4-B">4-B</option>
+                    <option value="5-A">5-A</option>
+                    <option value="5-B">5-B</option>
+                    <option value="6-A">6-A</option>
+                    <option value="6-B">6-B</option>
+                    <option value="7-A">7-A</option>
+                    <option value="7-B">7-B</option>
+                    <option value="8-A">8-A</option>
+                    <option value="8-B">8-B</option>
+                    <option value="9-A">9-A</option>
+                    <option value="9-B">9-B</option>
+                    <option value="10-A">10-A</option>
+                    <option value="10-B">10-B</option>
+                    <option value="11-A">11-A</option>
+                    <option value="11-B">11-B</option>
+                    <option value="12-A">12-A</option>
+                    <option value="12-B">12-B</option>
+                  </select>
                 </div>
               </div>
 
