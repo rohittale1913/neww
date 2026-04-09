@@ -3,7 +3,16 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
+
+// Get the directory of the current file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env file from the server directory
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -20,8 +29,6 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import transportRoutes from './routes/transportRoutes.js';
 import classRoutes from './routes/classRoutes.js';
-
-dotenv.config();
 
 const app = express();
 
