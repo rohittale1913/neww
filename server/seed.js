@@ -348,8 +348,10 @@ async function seedDatabase() {
       bankAccount: '9876543210123456',
       ifscCode: 'SBIN0001234',
       department: 'Finance',
-      phone: '7654321000',
-      email: 'accountant@school.com'
+      phone: 7654321000,
+      email: 'accountant@school.com',
+      gender: 'Female',
+      dateOfBirth: '1990-03-15'
     }).save();
 
     // Librarian
