@@ -2,6 +2,8 @@ import create from 'zustand';
 
 const useAuthStore = create((set) => ({
   user: null,
+  studentProfile: null,
+  classTeacher: null,
   token: localStorage.getItem('token') || null,
   isLoading: false,
   error: null,
@@ -17,7 +19,7 @@ const useAuthStore = create((set) => ({
   },
 
   logout: () => {
-    set({ user: null, token: null });
+    set({ user: null, studentProfile: null, classTeacher: null, token: null });
     localStorage.removeItem('token');
   },
 
@@ -28,6 +30,14 @@ const useAuthStore = create((set) => ({
 
   setUser: (user) => {
     set({ user });
+  },
+
+  setStudentProfile: (studentProfile) => {
+    set({ studentProfile });
+  },
+
+  setClassTeacher: (classTeacher) => {
+    set({ classTeacher });
   }
 }));
 

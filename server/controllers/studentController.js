@@ -1,5 +1,66 @@
 import Student from '../models/Student.js';
 import User from '../models/User.js';
+import Teacher from '../models/Teacher.js';
+
+// Get student by User ID (for logged-in student)
+export const getStudentByUserId = async (req, res) => {
+  try {
+    const userId = req.user.id; // From auth middleware
+    const student = await Student.findOne({ userId })
+      .populate('userId', 'name email phone role profileImage')
+      .lean();
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+    
+    res.json(student);
+  } catch (error) {
+    console.error('Error fetching student by userId:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get student profile with class teacher information
+export const getStudentProfileWithClassTeacher = async (req, res) => {
+  try {
+    // Can be called with userId param or use authenticated user id
+    const userId = req.params.userId || req.user.id;
+    
+    // Fetch student profile
+    const student = await Student.findOne({ userId })
+      .populate('userId', 'name email phone role profileImage')
+      .lean();
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+    
+    // Find class teacher for this student's class
+    let classTeacher = null;
+    if (student.class) {
+      classTeacher = await Teacher.findOne({
+        classTeacherOf: student.class,
+        isClassTeacher: true,
+        isActive: true
+      })
+      .populate('userId', 'name email phone profileImage')
+      .select('teacherId userId name gender email phone experience qualification subjects classTeacherOf')
+      .lean();
+    }
+    
+    // Prepare response
+    const response = {
+      ...student,
+      classTeacher: classTeacher || null
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching student profile with class teacher:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Get all students
 export const getAllStudents = async (req, res) => {
@@ -241,4 +302,12 @@ export const deleteStudent = async (req, res) => {
   }
 };
 
-export default { getAllStudents, getStudentById, createStudent, updateStudent, deleteStudent };
+export default { 
+  getAllStudents, 
+  getStudentById, 
+  createStudent, 
+  updateStudent, 
+  deleteStudent,
+  getStudentByUserId,
+  getStudentProfileWithClassTeacher
+};

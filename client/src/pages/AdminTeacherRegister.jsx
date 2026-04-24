@@ -12,7 +12,7 @@ const AdminTeacherRegister = () => {
     confirmPassword: '',
     qualification: '',
     subjects: [],
-    classes: [],
+    classAssignments: [], // [{class: '10', sections: ['A', 'B']}, ...]
     experience: '',
     employmentType: 'full-time',
     isClassTeacher: false,
@@ -22,6 +22,8 @@ const AdminTeacherRegister = () => {
     address: '',
     bloodGroup: ''
   });
+  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedSections, setSelectedSections] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -29,10 +31,22 @@ const AdminTeacherRegister = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setTeacherData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const newValue = type === 'checkbox' ? checked : value;
+    
+    setTeacherData(prev => {
+      const updated = { ...prev, [name]: newValue };
+      
+      // If classTeacherOf is set, automatically set isClassTeacher to true
+      if (name === 'classTeacherOf' && value) {
+        updated.isClassTeacher = true;
+      }
+      // If classTeacherOf is cleared, set isClassTeacher to false
+      if (name === 'classTeacherOf' && !value) {
+        updated.isClassTeacher = false;
+      }
+      
+      return updated;
+    });
   };
 
   const handleSubjectChange = (subject) => {
@@ -44,13 +58,35 @@ const AdminTeacherRegister = () => {
     }));
   };
 
-  const handleClassChange = (cls) => {
+  const handleAddClassAssignment = () => {
+    if (selectedClass && selectedSections.length > 0) {
+      setTeacherData(prev => ({
+        ...prev,
+        classAssignments: [
+          ...prev.classAssignments,
+          { class: selectedClass, sections: selectedSections }
+        ]
+      }));
+      setSelectedClass('');
+      setSelectedSections([]);
+    }
+  };
+
+  const handleRemoveClassAssignment = (classToRemove) => {
     setTeacherData(prev => ({
       ...prev,
-      classes: prev.classes.includes(cls)
-        ? prev.classes.filter(c => c !== cls)
-        : [...prev.classes, cls]
+      classAssignments: prev.classAssignments.filter(ca => ca.class !== classToRemove)
     }));
+  };
+
+  const handleAddSection = (section) => {
+    if (!selectedSections.includes(section)) {
+      setSelectedSections([...selectedSections, section]);
+    }
+  };
+
+  const handleRemoveSection = (section) => {
+    setSelectedSections(selectedSections.filter(s => s !== section));
   };
 
   const handleSubmit = async (e) => {
@@ -66,6 +102,22 @@ const AdminTeacherRegister = () => {
         return;
       }
 
+      if (teacherData.subjects.length === 0) {
+        setError('Please select at least one subject');
+        setLoading(false);
+        return;
+      }
+
+      if (teacherData.classAssignments.length === 0) {
+        setError('Please select at least one class with its sections');
+        setLoading(false);
+        return;
+      }
+
+      // Flatten classAssignments to classes and sections arrays
+      const allClasses = [...new Set(teacherData.classAssignments.map(ca => ca.class))];
+      const allSections = [...new Set(teacherData.classAssignments.flatMap(ca => ca.sections))];
+
       // Register user
       const response = await authAPI.register({
         name: teacherData.name,
@@ -79,7 +131,8 @@ const AdminTeacherRegister = () => {
       await teacherAPI.create({
         qualification: teacherData.qualification,
         subjects: teacherData.subjects,
-        classes: teacherData.classes,
+        classes: allClasses,
+        sections: allSections,
         experience: parseInt(teacherData.experience) || 0,
         employmentType: teacherData.employmentType,
         isClassTeacher: teacherData.isClassTeacher,
@@ -315,23 +368,81 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Classes <span className="text-red-500">*</span></label>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3 p-4 border border-slate-300 rounded-lg bg-slate-50">
-                    {['1-A', '1-B', '2-A', '2-B', '3-A', '3-B', '4-A', '4-B', '5-A', '5-B', '6-A', '6-B', '7-A', '7-B', '8-A', '8-B', '9-A', '9-B', '10-A', '10-B', '11-A', '11-B', '12-A', '12-B'].map(cls => (
-                      <label key={cls} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={teacherData.classes.includes(cls)}
-                          onChange={() => handleClassChange(cls)}
-                          className="w-4 h-4 text-primary rounded focus:ring-2 focus:ring-primary"
-                        />
-                        <span className="text-sm text-slate-700 font-medium">{cls}</span>
-                      </label>
-                    ))}
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Class & Section Assignment <span className="text-red-500">*</span></label>
+                  
+                  {/* Step 1: Select Class */}
+                  <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Step 1: Select a Class</p>
+                    <select
+                      value={selectedClass}
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">-- Select Class --</option>
+                      {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+                        .filter(cls => !teacherData.classAssignments.some(ca => ca.class === cls))
+                        .map(cls => (
+                          <option key={cls} value={cls}>Class {cls}</option>
+                        ))}
+                    </select>
                   </div>
-                  {teacherData.classes.length === 0 && (
-                    <p className="text-sm text-red-600 mt-2">Please select at least one class</p>
+
+                  {/* Step 2: Select Sections for the Class */}
+                  {selectedClass && (
+                    <div className="mb-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
+                      <p className="text-sm font-semibold text-slate-700 mb-3">Step 2: Select Sections for Class {selectedClass}</p>
+                      <div className="flex gap-2 flex-wrap mb-3">
+                        {['A', 'B', 'C', 'D', 'E'].map(section => (
+                          <button
+                            key={section}
+                            type="button"
+                            onClick={() => handleAddSection(section)}
+                            className={`px-4 py-2 rounded-lg font-medium transition ${
+                              selectedSections.includes(section)
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white border border-blue-300 text-blue-600 hover:bg-blue-50'
+                            }`}
+                          >
+                            Section {section}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {selectedSections.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleAddClassAssignment}
+                          className="w-full bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition"
+                        >
+                          Add Class {selectedClass} with Section{selectedSections.length > 1 ? 's' : ''} {selectedSections.join(', ')}
+                        </button>
+                      )}
+                    </div>
                   )}
+
+                  {/* Display Added Class Assignments */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-slate-700">Added Class Assignments:</p>
+                    {teacherData.classAssignments.length > 0 ? (
+                      teacherData.classAssignments.map((assignment, idx) => (
+                        <div key={idx} className="bg-emerald-50 border border-emerald-300 rounded-lg p-3 flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-emerald-900">Class {assignment.class}</p>
+                            <p className="text-sm text-emerald-700">Sections: {assignment.sections.join(', ')}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveClassAssignment(assignment.class)}
+                            className="text-emerald-600 hover:text-emerald-800 font-bold text-xl"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-red-600">Please add at least one class with sections</p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -349,39 +460,34 @@ const AdminTeacherRegister = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Class Teacher Of</label>
-                  <select
-                    name="classTeacherOf"
-                    value={teacherData.classTeacherOf}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Select Class (if applicable)</option>
-                    <option value="1-A">1-A</option>
-                    <option value="1-B">1-B</option>
-                    <option value="2-A">2-A</option>
-                    <option value="2-B">2-B</option>
-                    <option value="3-A">3-A</option>
-                    <option value="3-B">3-B</option>
-                    <option value="4-A">4-A</option>
-                    <option value="4-B">4-B</option>
-                    <option value="5-A">5-A</option>
-                    <option value="5-B">5-B</option>
-                    <option value="6-A">6-A</option>
-                    <option value="6-B">6-B</option>
-                    <option value="7-A">7-A</option>
-                    <option value="7-B">7-B</option>
-                    <option value="8-A">8-A</option>
-                    <option value="8-B">8-B</option>
-                    <option value="9-A">9-A</option>
-                    <option value="9-B">9-B</option>
-                    <option value="10-A">10-A</option>
-                    <option value="10-B">10-B</option>
-                    <option value="11-A">11-A</option>
-                    <option value="11-B">11-B</option>
-                    <option value="12-A">12-A</option>
-                    <option value="12-B">12-B</option>
-                  </select>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Class Teacher Of (Optional)</label>
+                  {teacherData.classAssignments.length > 0 ? (
+                    <div>
+                      <p className="text-xs text-slate-600 mb-2">Select from assigned classes and sections:</p>
+                      <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
+                        {teacherData.classAssignments.map((assignment) => (
+                          assignment.sections.map(section => (
+                            <label key={`${assignment.class}-${section}`} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="classTeacherOf"
+                                value={assignment.class}
+                                checked={teacherData.classTeacherOf === assignment.class}
+                                onChange={handleChange}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm text-slate-700">Class {assignment.class} - Section {section}</span>
+                            </label>
+                          ))
+                        ))}
+                      </div>
+                      {teacherData.classTeacherOf && (
+                        <p className="text-xs text-emerald-600 mt-2">Selected as Class Teacher for: Class {teacherData.classTeacherOf}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 italic">Please select classes and sections above first</p>
+                  )}
                 </div>
               </div>
 

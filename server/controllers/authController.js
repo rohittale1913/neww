@@ -96,7 +96,8 @@ export const login = async (req, res) => {
 
     const token = generateToken(user._id, user.role);
 
-    res.json({
+    // Base response
+    let responseData = {
       message: 'Login successful',
       token,
       user: {
@@ -106,7 +107,42 @@ export const login = async (req, res) => {
         role: user.role,
         profileImage: user.profileImage
       }
-    });
+    };
+
+    // If student login, populate student profile and class teacher
+    if (user.role === 'student') {
+      try {
+        // Fetch student profile
+        const studentProfile = await Student.findOne({ userId: user._id })
+          .populate('userId', 'name email phone role profileImage')
+          .lean();
+
+        if (studentProfile) {
+          responseData.studentProfile = studentProfile;
+
+          // Fetch class teacher for this student's class
+          if (studentProfile.class) {
+            const classTeacher = await Teacher.findOne({
+              classTeacherOf: studentProfile.class,
+              isClassTeacher: true,
+              isActive: true
+            })
+            .populate('userId', 'name email phone profileImage')
+            .select('teacherId userId name gender email phone experience qualification subjects classTeacherOf')
+            .lean();
+
+            if (classTeacher) {
+              responseData.classTeacher = classTeacher;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching student profile and class teacher:', error);
+        // Don't fail the login if profile fetch fails, just return user info
+      }
+    }
+
+    res.json(responseData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

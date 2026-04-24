@@ -34,7 +34,7 @@ export const getTeacherById = async (req, res) => {
 // Create new teacher
 export const createTeacher = async (req, res) => {
   try {
-    const { userId, qualification, experience, subjects, classes, isClassTeacher, classTeacherOf, employmentType, dateOfBirth, gender, bloodGroup, address } = req.body;
+    const { userId, qualification, experience, subjects, classes, sections, isClassTeacher, classTeacherOf, employmentType, dateOfBirth, gender, bloodGroup, address } = req.body;
 
     // Validate userId is provided
     if (!userId) {
@@ -70,6 +70,7 @@ export const createTeacher = async (req, res) => {
       name: user.name,
       subjects: subjects && subjects.length ? subjects : [],
       classes: classes && classes.length ? classes : [],
+      sections: sections && sections.length ? sections : [],
       qualification: qualification || '',
       experience: experience || 0,
       employmentType: employmentType || '',
@@ -109,7 +110,7 @@ export const createTeacher = async (req, res) => {
 // Update teacher
 export const updateTeacher = async (req, res) => {
   try {
-    const { name, email, phone, qualification, experience, subjects, classes, isClassTeacher, classTeacherOf, employmentType, gender, dateOfBirth, bloodGroup, address, joiningDate } = req.body;
+    const { name, email, phone, qualification, experience, subjects, classes, sections, isClassTeacher, classTeacherOf, employmentType, gender, dateOfBirth, bloodGroup, address, joiningDate } = req.body;
 
     // Find the teacher record
     const teacher = await Teacher.findById(req.params.id);
@@ -140,6 +141,7 @@ export const updateTeacher = async (req, res) => {
         experience: experience !== undefined ? experience : teacher.experience,
         subjects: subjects !== undefined ? subjects : teacher.subjects,
         classes: classes !== undefined ? classes : teacher.classes,
+        sections: sections !== undefined ? sections : teacher.sections,
         isClassTeacher: isClassTeacher !== undefined ? isClassTeacher : teacher.isClassTeacher,
         classTeacherOf: classTeacherOf !== undefined ? classTeacherOf : teacher.classTeacherOf,
         employmentType: employmentType !== undefined ? employmentType : teacher.employmentType,

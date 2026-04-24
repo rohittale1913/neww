@@ -9,26 +9,26 @@ const Alert = ({ type = 'success', message, onClose, duration = 4000 }) => {
   }, [onClose, duration]);
 
   const typeClasses = {
-    success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    error: 'bg-rose-50 text-rose-800 border-rose-200',
-    warning: 'bg-amber-50 text-amber-800 border-amber-200',
-    info: 'bg-blue-50 text-blue-800 border-blue-200'
+    success: 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-900 border-emerald-300 shadow-md',
+    error: 'bg-gradient-to-r from-red-50 to-rose-50 text-red-900 border-red-300 shadow-md',
+    warning: 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 border-amber-300 shadow-md',
+    info: 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-900 border-blue-300 shadow-md'
   };
 
   const iconClasses = {
-    success: 'text-emerald-500',
-    error: 'text-rose-500',
-    warning: 'text-amber-500',
-    info: 'text-blue-500'
+    success: 'text-emerald-600 text-2xl',
+    error: 'text-red-600 text-2xl',
+    warning: 'text-amber-600 text-2xl',
+    info: 'text-blue-600 text-2xl'
   };
 
   const Icon = type === 'error' ? FiAlertCircle : FiCheckCircle;
 
   return (
-    <div className={`border rounded-lg p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top ${typeClasses[type]}`}>
-      <Icon className={`text-xl flex-shrink-0 ${iconClasses[type]}`} />
-      <span className="flex-1 font-medium">{message}</span>
-      <button onClick={onClose} className="text-lg hover:opacity-60 transition flex-shrink-0">
+    <div className={`border-2 rounded-lg p-5 flex items-center gap-3 animate-in fade-in slide-in-from-top font-semibold ${typeClasses[type]}`}>
+      <Icon className={`flex-shrink-0 ${iconClasses[type]}`} />
+      <span className="flex-1">{message}</span>
+      <button onClick={onClose} className="text-lg hover:opacity-70 transition flex-shrink-0">
         <FiX />
       </button>
     </div>

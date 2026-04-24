@@ -70,6 +70,16 @@ const StudentRegisterPage = () => {
     setError('');
 
     // Validate required fields
+    if (!studentData.class) {
+      setError('Class is required');
+      setLoading(false);
+      return;
+    }
+    if (!studentData.section) {
+      setError('Section is required');
+      setLoading(false);
+      return;
+    }
     if (!studentData.gender) {
       setError('Gender is required');
       setLoading(false);
@@ -134,37 +144,49 @@ const StudentRegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">Student Registration</h1>
-        <p className="text-center text-slate-600 text-sm mb-6">
-          Step {step} of 2 - {step === 1 ? 'Account Credentials' : 'Admission Details'}
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 relative overflow-hidden">
+      {/* Animated gradient orbs */}
+      <div className="absolute top-0 -right-1/4 w-96 h-96 bg-gradient-to-br from-blue-500 to-purple-500 opacity-10 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-1/4 -left-1/4 w-96 h-96 bg-gradient-to-br from-indigo-500 to-blue-500 opacity-10 rounded-full blur-3xl"></div>
+      
+      <div className="relative z-10 bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-10 w-full max-w-md border border-white/20">
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl mb-4 shadow-lg">
+            <span className="text-white font-bold text-2xl">S</span>
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent mb-2">Student Registration</h1>
+          <div className="flex justify-center items-center gap-2 text-sm text-slate-600 mb-4">
+            <div className={`h-2 w-8 rounded-full transition ${step === 1 ? 'bg-blue-600' : 'bg-slate-300'}`}></div>
+            <span className="text-slate-500">|</span>
+            <div className={`h-2 w-8 rounded-full transition ${step === 2 ? 'bg-blue-600' : 'bg-slate-300'}`}></div>
+            <span className="text-xs font-semibold text-slate-600 ml-2">Step {step} of 2: {step === 1 ? 'Account' : 'Admission'}</span>
+          </div>
+        </div>
 
         {step === 1 ? (
-          <form onSubmit={handleStep1Submit} className="space-y-4">
+          <form onSubmit={handleStep1Submit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">Full Name</label>
               <input
                 type="text"
                 name="name"
                 value={userData.name}
                 onChange={handleUserChange}
                 required
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 hover:bg-slate-100 text-slate-900 placeholder-slate-400 font-medium"
                 placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">Email</label>
               <input
                 type="email"
                 name="email"
                 value={userData.email}
                 onChange={handleUserChange}
                 required
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50 hover:bg-slate-100 text-slate-900 placeholder-slate-400 font-medium"
                 placeholder="student@school.com"
               />
             </div>
@@ -207,17 +229,21 @@ const StudentRegisterPage = () => {
               />
             </div>
 
-            {error && <div className="text-rose-600 text-sm bg-rose-50 p-3 rounded border border-rose-200">{error}</div>}
+            {error && (
+              <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-300 text-red-700 text-sm p-4 rounded-lg font-medium shadow-sm">
+                {error}
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-bold hover:shadow-lg hover:-translate-y-0.5 transition duration-300 uppercase tracking-wide"
             >
               Next: Admission Details
             </button>
           </form>
         ) : (
-          <form onSubmit={handleFinalSubmit} className="space-y-4">
+          <form onSubmit={handleFinalSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Gender</label>
               <select
@@ -264,20 +290,32 @@ const StudentRegisterPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Class</label>
-              <input
-                type="text"
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Class <span className="text-red-500">*</span></label>
+              <select
                 name="class"
                 value={studentData.class}
                 onChange={handleStudentChange}
                 required
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="e.g., 10-A"
-              />
+              >
+                <option value="">Select Class</option>
+                <option value="1">Class 1</option>
+                <option value="2">Class 2</option>
+                <option value="3">Class 3</option>
+                <option value="4">Class 4</option>
+                <option value="5">Class 5</option>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+              </select>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Section</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Section <span className="text-red-500">*</span></label>
               <select
                 name="section"
                 value={studentData.section}
@@ -289,6 +327,8 @@ const StudentRegisterPage = () => {
                 <option value="A">A</option>
                 <option value="B">B</option>
                 <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
               </select>
             </div>
 
@@ -414,20 +454,24 @@ const StudentRegisterPage = () => {
               />
             </div>
 
-            {error && <div className="text-rose-600 text-sm bg-rose-50 p-3 rounded border border-rose-200">{error}</div>}
+            {error && (
+              <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-300 text-red-700 text-sm p-4 rounded-lg font-medium shadow-sm">
+                {error}
+              </div>
+            )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="flex-1 bg-slate-300 text-slate-800 py-2 rounded-lg font-semibold hover:bg-slate-400 transition"
+                className="flex-1 bg-slate-200 text-slate-900 py-3 rounded-lg font-bold hover:bg-slate-300 transition uppercase tracking-wide"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-primary text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-bold hover:shadow-lg hover:-translate-y-0.5 transition duration-300 disabled:opacity-50 uppercase tracking-wide"
               >
                 {loading ? 'Registering...' : 'Complete Registration'}
               </button>
@@ -435,9 +479,9 @@ const StudentRegisterPage = () => {
           </form>
         )}
 
-        <p className="text-center text-gray-600 text-sm mt-4">
+        <p className="text-center text-slate-600 text-sm mt-8 border-t border-slate-200 pt-8">
           Already have an account?{' '}
-          <Link to="/login" className="text-primary font-medium hover:underline">
+          <Link to="/login" className="text-blue-600 font-bold hover:text-blue-700 transition">
             Login here
           </Link>
         </p>

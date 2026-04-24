@@ -6,6 +6,7 @@ const teacherSchema = new mongoose.Schema({
   name: { type: String, required: true },
   subjects: {type:[String],required:true},
   classes: {type:[String],required:true},
+  sections: {type:[String],default:[]},
   joiningDate: { type: Date, default: Date.now },
   qualification: { type: String, required: true },
   experience: { type: Number, required: true },
