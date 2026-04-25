@@ -158,4 +158,61 @@ export const generateReportCard = async (req, res) => {
   }
 };
 
-export default { getAllExams, createExam, addMarks, getStudentResults, getExamResults, generateReportCard };
+// Update exam
+export const updateExam = async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const { examName, examType, classId, subjects, startDate, endDate, totalMarks, passingMarks, academicYear, description } = req.body;
+
+    const exam = await Exam.findByIdAndUpdate(
+      examId,
+      {
+        examName,
+        examType,
+        classId,
+        subjects,
+        startDate,
+        endDate,
+        totalMarks,
+        passingMarks,
+        academicYear,
+        description,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    ).populate('classId', 'className section').populate('subjects', 'name');
+
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found' });
+    }
+
+    res.json({
+      message: 'Exam updated successfully',
+      exam
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete exam
+export const deleteExam = async (req, res) => {
+  try {
+    const { examId } = req.params;
+
+    const exam = await Exam.findByIdAndDelete(examId);
+
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found' });
+    }
+
+    // Delete associated results
+    await Result.deleteMany({ examId });
+
+    res.json({ message: 'Exam deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export default { getAllExams, createExam, updateExam, deleteExam, addMarks, getStudentResults, getExamResults, generateReportCard };

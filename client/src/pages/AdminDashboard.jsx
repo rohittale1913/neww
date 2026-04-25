@@ -56,7 +56,7 @@ const AdminDashboard = () => {
       onClick={onClick}
       className={`bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg hover:shadow-2xl border border-slate-100 hover:border-slate-300 transition duration-300 p-6 flex items-center gap-4 transform hover:scale-105 hover:-translate-y-1 ${onClick ? 'cursor-pointer' : ''}`}
     >
-      <div className={`text-5xl p-4 rounded-2xl ${bgColor} shadow-md`}>
+      <div className={`text-2xl p-4 rounded-2xl ${bgColor} shadow-md`}>
         <Icon className={iconColor} />
       </div>
       <div className="flex flex-col">
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-600 to-slate-900 bg-clip-text text-transparent">Welcome Back!</h1>
-            <p className="text-slate-500 mt-3 text-lg">Here's your school management overview</p>
+            {/* <p className="text-slate-500 mt-3 text-lg">Here's your school management overview</p> */}
           </div>
         </div>
 
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             icon={FiCheckCircle} 
             label="Attendance Module" 

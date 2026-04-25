@@ -9,17 +9,17 @@ const Alert = ({ type = 'success', message, onClose, duration = 4000 }) => {
   }, [onClose, duration]);
 
   const typeClasses = {
-    success: 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-900 border-emerald-300 shadow-md',
-    error: 'bg-gradient-to-r from-red-50 to-rose-50 text-red-900 border-red-300 shadow-md',
-    warning: 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 border-amber-300 shadow-md',
-    info: 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-900 border-blue-300 shadow-md'
+    success: 'bg-green-50 text-green-900 border-green-300',
+    error: 'bg-red-50 text-red-900 border-red-300',
+    warning: 'bg-yellow-50 text-yellow-900 border-yellow-300',
+    info: 'bg-blue-50 text-blue-900 border-blue-300'
   };
 
   const iconClasses = {
-    success: 'text-emerald-600 text-2xl',
-    error: 'text-red-600 text-2xl',
-    warning: 'text-amber-600 text-2xl',
-    info: 'text-blue-600 text-2xl'
+    success: 'text-green-600 text-base',
+    error: 'text-red-600 text-base',
+    warning: 'text-yellow-600 text-base',
+    info: 'text-blue-600 text-base'
   };
 
   const Icon = type === 'error' ? FiAlertCircle : FiCheckCircle;

@@ -148,7 +148,7 @@ const TeacherUsersView = () => {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-slate-900">Teacher Users </h1>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-600 to-slate-900 bg-clip-text text-transparent">Teacher Users </h1>
           {/* <p className="text-slate-600 text-sm mt-2">View and manage all registered teachers in the system</p> */}
         </div>
 

@@ -57,7 +57,7 @@ const AdminAttendanceManagement = () => {
 
   const StatCard = ({ icon: Icon, label, value, bgColor, iconColor }) => (
     <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg hover:shadow-xl border border-slate-100 hover:border-slate-300 transition p-6 flex items-center gap-4">
-      <div className={`text-5xl p-4 rounded-2xl ${bgColor} shadow-md`}>
+      <div className={`text-2xl p-4 rounded-2xl ${bgColor} shadow-md`}>
         <Icon className={iconColor} />
       </div>
       <div className="flex flex-col">
@@ -76,8 +76,8 @@ const AdminAttendanceManagement = () => {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">Attendance Management</h1>
-            <p className="text-slate-500 mt-2">Track and manage student attendance records</p>
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-600 to-slate-900 bg-clip-text text-transparent">Attendance Management</h1>
+            {/* <p className="text-slate-500 mt-2">Track and manage student attendance records</p> */}
           </div>
           <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-3 rounded-xl border border-blue-200">
             <FiCalendar className="text-blue-600 text-xl" />
@@ -205,7 +205,7 @@ const AdminAttendanceManagement = () => {
                       No attendance records found for this date
                     </td>
                   </tr>
-                )}}
+                )}
               </tbody>
             </table>
           </div>

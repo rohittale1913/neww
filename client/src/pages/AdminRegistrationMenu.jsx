@@ -40,8 +40,8 @@ const AdminRegistrationMenu = () => {
     <DashboardLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">User Registration</h1>
-          <p className="text-slate-600 mt-2">Select the type of user you want to register</p>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-600 to-slate-900 bg-clip-text text-transparent">User Registration</h1>
+          {/* <p className="text-slate-600 mt-2">Select the type of user you want to register</p> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
