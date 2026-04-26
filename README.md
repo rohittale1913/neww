@@ -6,7 +6,7 @@ This is a complete Industry-Level School ERP (Enterprise Resource Planning) Plat
 ## Features
 
 ### 12 Main Modules
-1. **Authentication & User Management** - Role-based login system
+1. **Authentication & User Management** - Role-based login system.
 2. **Student Management** - Complete student profile & documentation
 3. **Teacher Management** - Teacher profiles & assignments
 4. **Class & Section Management** - Class, subject, and section organization
