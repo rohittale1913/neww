@@ -75,7 +75,7 @@ const StudentDashboard = () => {
       <div className="space-y-8">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
-            Welcome, {studentProfile?.name || user?.name || 'Student'}! 👋
+            Welcome, {studentProfile?.name || user?.name || 'Student'}! 
           </h1>
           <p className="text-slate-500 text-sm mt-2">
             Track your academic progress and view your class teacher information
