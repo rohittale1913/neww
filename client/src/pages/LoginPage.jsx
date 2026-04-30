@@ -49,7 +49,7 @@ const LoginPage = () => {
             <span className="text-white font-bold text-2xl">E</span>
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent mb-2">School ERP</h1>
-          <p className="text-slate-500 text-sm font-medium">Professional Management System</p>
+          {/* <p className="text-slate-500 text-sm font-medium">Professional Management System</p> */}
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">

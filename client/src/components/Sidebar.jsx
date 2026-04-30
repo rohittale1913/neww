@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiHome, FiUsers, FiBook, FiBarChart2, FiDollarSign, FiCalendar, FiFileText, FiTruck } from 'react-icons/fi';
+import { FiHome, FiUsers, FiBook, FiBarChart2, FiDollarSign, FiCalendar, FiFileText, FiTruck, FiClipboard, FiAward } from 'react-icons/fi';
 import useAuthStore from '../store/authStore';
 
 const Sidebar = ({ isOpen }) => {
@@ -18,20 +18,20 @@ const Sidebar = ({ isOpen }) => {
   ];
 
   const teacherMenuItems = [
-    { icon: <FiHome />, label: 'Dashboard', path: '/teacher' },
-    { icon: <FiUsers />, label: 'My Classes', path: '/teacher/classes' },
-    { icon: <FiCalendar />, label: 'Attendance', path: '/teacher/attendance' },
-    { icon: <FiFileText />, label: 'Assignments', path: '/teacher/assignments' },
-    { icon: <FiBarChart2 />, label: 'Exams', path: '/teacher/exams' }
+    { icon: <FiClipboard />, label: 'Overview', path: '/teacher?tab=overview' },
+    { icon: <FiBook />, label: 'My Classes', path: '/teacher?tab=classes' },
+    { icon: <FiCalendar />, label: 'Attendance', path: '/teacher?tab=attendance' },
+    { icon: <FiFileText />, label: 'Assignments', path: '/teacher?tab=assignments' },
+    { icon: <FiBarChart2 />, label: 'Exams', path: '/teacher?tab=exams' }
   ];
 
   const studentMenuItems = [
-    { icon: <FiHome />, label: 'Dashboard', path: '/student' },
-    { icon: <FiCalendar />, label: 'Attendance', path: '/student/attendance' },
-    { icon: <FiFileText />, label: 'Assignments', path: '/student/assignments' },
-    { icon: <FiBarChart2 />, label: 'Results', path: '/student/results' },
-    { icon: <FiDollarSign />, label: 'Fees', path: '/student/fees' },
-    { icon: <FiBook />, label: 'Library', path: '/student/library' }
+    { icon: <FiClipboard />, label: 'Overview', path: '/student?tab=overview' },
+    { icon: <FiCalendar />, label: 'Attendance', path: '/student?tab=attendance' },
+    { icon: <FiFileText />, label: 'Assignments', path: '/student?tab=assignments' },
+    { icon: <FiBarChart2 />, label: 'Exams', path: '/student?tab=exams' },
+    { icon: <FiAward />, label: 'Results', path: '/student?tab=results' },
+    { icon: <FiDollarSign />, label: 'Fees', path: '/student?tab=fees' }
   ];
 
   const parentMenuItems = [

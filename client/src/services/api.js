@@ -76,7 +76,18 @@ export const studentAPI = {
   getProfileWithTeacherCurrent: () => api.get('/students/profile/with-teacher'),
   create: (data) => api.post('/students', data),
   update: (id, data) => api.put(`/students/${id}`, data),
-  delete: (id) => api.delete(`/students/${id}`)
+  delete: (id) => api.delete(`/students/${id}`),
+  
+  // Student Module Endpoints
+  getMyAttendance: (params) => api.get('/students/my-attendance', { params }),
+  getMyAssignments: (filter) => api.get('/students/my-assignments', { params: { filter } }),
+  getAssignmentDetail: (assignmentId) => api.get(`/students/my-assignments/${assignmentId}`),
+  submitAssignment: (assignmentId, data) => api.post(`/students/my-assignments/${assignmentId}/submit`, data),
+  getMyExams: () => api.get('/students/my-exams'),
+  getExamDetail: (examId) => api.get(`/students/my-exams/${examId}`),
+  getMyResults: (params) => api.get('/students/my-results', { params }),
+  getMyFees: (params) => api.get('/students/my-fees', { params }),
+  getMySubjects: () => api.get('/students/my-subjects')
 };
 
 // Teacher APIs
@@ -85,7 +96,18 @@ export const teacherAPI = {
   getById: (id) => api.get(`/teachers/${id}`),
   create: (data) => api.post('/teachers', data),
   update: (id, data) => api.put(`/teachers/${id}`, data),
-  delete: (id) => api.delete(`/teachers/${id}`)
+  delete: (id) => api.delete(`/teachers/${id}`),
+  // Teacher-specific endpoints
+  getMyProfile: () => api.get('/teachers/my-profile'),
+  getMyClasses: () => api.get('/teachers/my-classes'),
+  getClassStudents: (className) => api.get(`/teachers/class/${className}/students`),
+  markAttendance: (data) => api.post('/teachers/attendance/mark', data),
+  getAttendance: (params) => api.get('/teachers/attendance', { params }),
+  getMyAssignments: (filter) => api.get('/teachers/my-assignments', { params: { filter } }),
+  getAssignmentDetail: (assignmentId) => api.get(`/teachers/my-assignments/${assignmentId}`),
+  gradeAssignment: (assignmentId, data) => api.post(`/teachers/my-assignments/${assignmentId}/grade`, data),
+  getMyExams: () => api.get('/teachers/my-exams'),
+  getExamDetail: (examId) => api.get(`/teachers/my-exams/${examId}`)
 };
 
 // Accountant APIs
@@ -118,6 +140,7 @@ export const transportManagerAPI = {
 // Attendance APIs
 export const attendanceAPI = {
   get: (params) => api.get('/attendance', { params }),
+  getAllAttendance: (params) => api.get('/attendance/all', { params }),
   getByStudent: (studentId) => api.get(`/attendance/student/${studentId}`),
   mark: (data) => api.post('/attendance', data),
   bulkMark: (data) => api.post('/attendance/bulk', data),

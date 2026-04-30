@@ -89,13 +89,20 @@ const TeacherUsersView = () => {
 
   const handleViewProfile = async (teacher) => {
     try {
+      console.log('🔍 Fetching full teacher profile for:', teacher.name);
       const response = await teacherAPI.getAll?.() || { data: [] };
+      console.log('📊 API response classAssignments:', response.data?.map(t => ({
+        name: t.name,
+        classAssignments: t.classAssignments
+      })));
+      
       const profiles = response.data || [];
       const fullProfile = profiles.find(p => 
         p.userId === teacher._id || p.userId?.id === teacher._id || p.userId?._id === teacher._id
       );
       
       if (fullProfile) {
+        console.log('✅ Full profile found:', fullProfile);
         setSelectedTeacher({
           ...teacher,
           ...fullProfile,
@@ -104,6 +111,7 @@ const TeacherUsersView = () => {
           isActive: teacher.isActive
         });
       } else {
+        console.warn('⚠️ Full profile not found, using basic teacher data');
         setSelectedTeacher(teacher);
       }
     } catch (err) {

@@ -1,18 +1,57 @@
 import Attendance from '../models/Attendance.js';
 import Student from '../models/Student.js';
+import Teacher from '../models/Teacher.js';
+
+// Get all attendance records (for admin)
+export const getAllAttendance = async (req, res) => {
+  try {
+    const { date, className, month, year } = req.query;
+
+    const query = {};
+    
+    if (date) {
+      // Single date query
+      query.date = new Date(date);
+    } else if (month && year) {
+      // Month range query
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      query.date = { $gte: startDate, $lte: endDate };
+    }
+    
+    if (className) {
+      query.className = className;
+    }
+
+    const attendance = await Attendance.find(query)
+      .populate('studentId', 'name rollNumber studentId email')
+      .populate('markedBy', 'name email')
+      .populate('teacherId', 'name teacherId qualification')
+      .lean()
+      .sort({ date: -1 });
+
+    res.json(attendance);
+  } catch (error) {
+    console.error('Error fetching attendance:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Get attendance by date
 export const getAttendanceByDate = async (req, res) => {
   try {
-    const { date, classId } = req.query;
+    const { date, className } = req.query;
     
     const query = {};
     if (date) query.date = new Date(date);
-    if (classId) query.classId = classId;
+    if (className) query.className = className;
 
     const attendance = await Attendance.find(query)
-      .populate('studentId', 'name rollNumber')
-      .populate('classId', 'className');
+      .populate('studentId', 'name rollNumber studentId email')
+      .populate('teacherId', 'name teacherId qualification')
+      .populate('markedBy', 'name email')
+      .lean()
+      .sort({ date: -1 });
     
     res.json(attendance);
   } catch (error) {
@@ -145,4 +184,4 @@ export const getAttendanceReport = async (req, res) => {
   }
 };
 
-export default { getAttendanceByDate, getStudentAttendance, markAttendance, bulkMarkAttendance, getAttendanceReport };
+export default { getAllAttendance, getAttendanceByDate, getStudentAttendance, markAttendance, bulkMarkAttendance, getAttendanceReport };

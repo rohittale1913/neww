@@ -7,6 +7,10 @@ const teacherSchema = new mongoose.Schema({
   subjects: {type:[String],required:true},
   classes: {type:[String],required:true},
   sections: {type:[String],default:[]},
+  classAssignments: [{
+    className: String,
+    sections: [String]
+  }],
   joiningDate: { type: Date, default: Date.now },
   qualification: { type: String, required: true },
   experience: { type: Number, required: true },

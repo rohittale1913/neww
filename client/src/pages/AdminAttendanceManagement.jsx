@@ -5,7 +5,7 @@ import { FiUsers, FiCheckCircle, FiX, FiCalendar } from 'react-icons/fi';
 
 const AdminAttendanceManagement = () => {
   const [attendance, setAttendance] = useState([]);
-  const [stats, setStats] = useState({ total: 0, present: 0, absent: 0, leave: 0 });
+  const [stats, setStats] = useState({ total: 0, present: 0, absent: 0, leave: 0, late: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [filter, setFilter] = useState('all');
@@ -14,22 +14,18 @@ const AdminAttendanceManagement = () => {
     const fetchAttendanceData = async () => {
       try {
         setLoading(true);
-        const response = await attendanceAPI.getAll();
+        const response = await attendanceAPI.getAllAttendance({ date: selectedDate });
         
-        // Filter by selected date
-        const filteredAttendance = response.data.filter(record => {
-          const recordDate = new Date(record.date).toISOString().split('T')[0];
-          return recordDate === selectedDate;
-        });
-
-        setAttendance(filteredAttendance);
+        const records = response.data || [];
+        setAttendance(records);
 
         // Calculate statistics
         const stats = {
-          total: filteredAttendance.length,
-          present: filteredAttendance.filter(r => r.status === 'present').length,
-          absent: filteredAttendance.filter(r => r.status === 'absent').length,
-          leave: filteredAttendance.filter(r => r.status === 'leave').length
+          total: records.length,
+          present: records.filter(r => r.status === 'present').length,
+          absent: records.filter(r => r.status === 'absent').length,
+          leave: records.filter(r => r.status === 'leave').length,
+          late: records.filter(r => r.status === 'late').length
         };
         setStats(stats);
       } catch (error) {
@@ -173,10 +169,10 @@ const AdminAttendanceManagement = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-slate-800 to-slate-900 text-white sticky top-0">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Student ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Class</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Section</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Student Name</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Roll No.</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Class-Section</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Teacher Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Date</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
                 </tr>
@@ -185,10 +181,10 @@ const AdminAttendanceManagement = () => {
                 {filteredAttendanceList.length > 0 ? (
                   filteredAttendanceList.map((record) => (
                     <tr key={record._id} className="border-b border-slate-100 hover:bg-blue-50 transition">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900">{record.studentId?.studentId || 'N/A'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{record.studentId?.name || 'N/A'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{record.studentId?.class || 'N/A'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{record.studentId?.section || 'N/A'}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900">{record.studentId?.name || 'N/A'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700">{record.studentId?.rollNumber || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 font-medium">{record.className ? `${record.className}-${record.section || ''}` : 'N/A'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700">{record.teacherId?.name || 'N/A'}</td>
                       <td className="px-6 py-4 text-sm text-slate-700">
                         {new Date(record.date).toLocaleDateString()}
                       </td>

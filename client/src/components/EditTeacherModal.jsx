@@ -16,19 +16,26 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
       setFormData(teacher);
       setSubjects(teacher.subjects || []);
       
-      // Convert classes and sections arrays to classAssignments structure
-      const classes = teacher.classes || [];
-      const sections = teacher.sections || [];
-      
-      if (classes.length > 0) {
-        // Create assignments where each class can have all sections
-        const assignments = classes.map(cls => ({
-          class: cls,
-          sections: sections.length > 0 ? sections : []
-        }));
-        setClassAssignments(assignments);
+      // First check if teacher.classAssignments exists (new format)
+      if (teacher.classAssignments && teacher.classAssignments.length > 0) {
+        console.log('✅ Loading from classAssignments:', teacher.classAssignments);
+        setClassAssignments(teacher.classAssignments);
       } else {
-        setClassAssignments([]);
+        // Fallback to converting from old classes/sections arrays (backward compatibility)
+        const classes = teacher.classes || [];
+        const sections = teacher.sections || [];
+        
+        if (classes.length > 0) {
+          console.log('⚠️ Converting from old format - classes:', classes, 'sections:', sections);
+          // Create assignments where each class has all sections
+          const assignments = classes.map(cls => ({
+            className: cls,
+            sections: sections.length > 0 ? sections : []
+          }));
+          setClassAssignments(assignments);
+        } else {
+          setClassAssignments([]);
+        }
       }
     }
   }, [teacher]);
@@ -57,7 +64,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
     if (selectedClass && selectedSections.length > 0) {
       setClassAssignments([
         ...classAssignments,
-        { class: selectedClass, sections: selectedSections }
+        { className: selectedClass, sections: selectedSections }
       ]);
       setSelectedClass('');
       setSelectedSections([]);
@@ -65,7 +72,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
   };
 
   const handleRemoveClassAssignment = (classToRemove) => {
-    setClassAssignments(classAssignments.filter(ca => ca.class !== classToRemove));
+    setClassAssignments(classAssignments.filter(ca => ca.className !== classToRemove));
   };
 
   const handleAddSection = (section) => {
@@ -99,6 +106,18 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
         }
       }
 
+      console.log('📋 Sending to backend:', {
+        classAssignments,
+        classes: [...new Set(classAssignments.map(ca => ca.className))],
+        sections: [...new Set(classAssignments.flatMap(ca => ca.sections))]
+      });
+
+      console.log('📋 Sending to backend:', {
+        classAssignments,
+        classes: [...new Set(classAssignments.map(ca => ca.className))],
+        sections: [...new Set(classAssignments.flatMap(ca => ca.sections))]
+      });
+
       const response = await teacherAPI.update(teacherId, {
         name: formData.name,
         email: formData.email,
@@ -106,8 +125,9 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
         qualification: formData.qualification,
         experience: formData.experience,
         subjects: subjects,
-        classes: [...new Set(classAssignments.map(ca => ca.class))],
+        classes: [...new Set(classAssignments.map(ca => ca.className))],
         sections: [...new Set(classAssignments.flatMap(ca => ca.sections))],
+        classAssignments: classAssignments,
         employmentType: formData.employmentType,
         isClassTeacher: formData.isClassTeacher,
         classTeacherOf: formData.classTeacherOf,
@@ -326,7 +346,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
               >
                 <option value="">-- Select Class --</option>
                 {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
-                  .filter(cls => !classAssignments.some(ca => ca.class === cls))
+                  .filter(cls => !classAssignments.some(ca => ca.className === cls))
                   .map(cls => (
                     <option key={cls} value={cls}>Class {cls}</option>
                   ))}
@@ -373,12 +393,12 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
                 classAssignments.map((assignment, idx) => (
                   <div key={idx} className="bg-emerald-50 border border-emerald-300 rounded-lg p-3 flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-emerald-900">Class {assignment.class}</p>
+                      <p className="font-semibold text-emerald-900">Class {assignment.className}</p>
                       <p className="text-sm text-emerald-700">Sections: {assignment.sections.join(', ')}</p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleRemoveClassAssignment(assignment.class)}
+                      onClick={() => handleRemoveClassAssignment(assignment.className)}
                       className="text-emerald-600 hover:text-emerald-800 font-bold text-xl"
                     >
                       ×
@@ -401,19 +421,22 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
                 <p className="text-sm text-slate-600">Select from assigned classes and sections:</p>
                 <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
                   {classAssignments.map((assignment) => (
-                    assignment.sections.map(section => (
-                      <label key={`${assignment.class}-${section}`} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="classTeacherOf"
-                          value={assignment.class}
-                          checked={formData.classTeacherOf === assignment.class}
-                          onChange={handleInputChange}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-slate-700">Class {assignment.class} - Section {section}</span>
-                      </label>
-                    ))
+                    assignment.sections.map(section => {
+                      const classTeacherValue = `${assignment.className}-${section}`; // Format: "10-A"
+                      return (
+                        <label key={classTeacherValue} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="classTeacherOf"
+                            value={classTeacherValue}
+                            checked={formData.classTeacherOf === classTeacherValue}
+                            onChange={handleInputChange}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-slate-700">Class {assignment.className} - Section {section}</span>
+                        </label>
+                      );
+                    })
                   ))}
                   <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-slate-300">
                     <input
@@ -428,7 +451,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
                   </label>
                 </div>
                 {formData.classTeacherOf && (
-                  <p className="text-xs text-emerald-600">Selected as Class Teacher for: Class {formData.classTeacherOf}</p>
+                  <p className="text-xs text-emerald-600">Selected as Class Teacher for: {formData.classTeacherOf}</p>
                 )}
               </div>
             ) : (

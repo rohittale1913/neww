@@ -27,6 +27,7 @@ const AdminUserManagement = () => {
     qualification: '',
     subjects: '',
     classes: '',
+    sections: '',
     experience: '',
     employmentType: 'full-time',
     isClassTeacher: false,
@@ -93,10 +94,21 @@ const AdminUserManagement = () => {
           userId
         });
       } else if (userType === 'teacher') {
+        const classesArray = formData.classes.split(',').map(c => c.trim()).filter(c => c);
+        const sectionsArray = formData.sections.split(',').map(s => s.trim()).filter(s => s);
+        
+        // Build classAssignments array: each class paired with all sections
+        const classAssignments = classesArray.map(className => ({
+          className,
+          sections: sectionsArray
+        }));
+
         await teacherAPI.create({
           qualification: formData.qualification,
-          subjects: formData.subjects.split(',').map(s => s.trim()),
-          classes: formData.classes.split(',').map(c => c.trim()),
+          subjects: formData.subjects.split(',').map(s => s.trim()).filter(s => s),
+          classes: classesArray,
+          sections: sectionsArray,
+          classAssignments: classAssignments,
           experience: parseInt(formData.experience) || 0,
           employmentType: formData.employmentType,
           isClassTeacher: formData.isClassTeacher,
@@ -135,7 +147,7 @@ const AdminUserManagement = () => {
         name: '', email: '', password: '', phone: '',
         class: '', section: '', rollNumber: '', dateOfBirth: '',
         parentContact: '', address: '', bloodGroup: '',
-        qualification: '', subjects: '', classes: '', experience: '',
+        qualification: '', subjects: '', classes: '', sections: '', experience: '',
         employmentType: 'full-time', isClassTeacher: false, classTeacherOf: '',
         bankAccount: '', ifscCode: '', specialization: '', licenseNumber: '', licenseExpiry: ''
       });
@@ -414,7 +426,18 @@ const AdminUserManagement = () => {
                           value={formData.classes}
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                          placeholder="10-A, 10-B"
+                          placeholder="9, 10"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Sections (comma separated) *</label>
+                        <input
+                          type="text"
+                          name="sections"
+                          value={formData.sections}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="A, B"
                         />
                       </div>
                     </div>
@@ -447,15 +470,21 @@ const AdminUserManagement = () => {
                     </div>
                     {formData.isClassTeacher && (
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">Class Teacher Of</label>
-                        <input
-                          type="text"
-                          name="classTeacherOf"
-                          value={formData.classTeacherOf}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                          placeholder="10-A"
-                        />
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Class Teacher Of (Format: "ClassName-Section") *</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            name="classTeacherOf"
+                            value={formData.classTeacherOf}
+                            onChange={handleInputChange}
+                            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="10-A"
+                          />
+                          <span className="flex items-center text-xs text-slate-500 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                            e.g. "10-A"
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Example: "9-A", "10-B", "11-C"</p>
                       </div>
                     )}
                   </div>
