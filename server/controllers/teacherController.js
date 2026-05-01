@@ -5,6 +5,7 @@ import Student from '../models/Student.js';
 import Attendance from '../models/Attendance.js';
 import Assignment from '../models/Assignment.js';
 import Exam from '../models/Exam.js';
+import ClassSubjectTeacher from '../models/ClassSubjectTeacher.js';
 
 // Get all teachers
 export const getAllTeachers = async (req, res) => {
@@ -415,14 +416,40 @@ export const getMyClasses = async (req, res) => {
       classTeacherOf: teacher.classTeacherOf
     });
 
+    // Fetch teacher's class assignments from ClassSubjectTeacher
+    const classAssignments = await ClassSubjectTeacher.find({
+      teacherId: teacher._id,
+      isActive: true
+    }).lean();
+
+    console.log('📚 ClassSubjectTeacher assignments found:', classAssignments.length);
+    classAssignments.forEach(ca => {
+      console.log(`  - ${ca.className}-${ca.section}: subjects=${ca.subjects.join(', ')}, type=${ca.assignmentType}`);
+    });
+
     // Build query to find classes where:
     // 1. Teacher is the class teacher (classTeacher field matches teacher._id)
-    // 2. Teacher teaches the class AND the specific section (using classAssignments if available)
+    // 2. Teacher teaches the class AND the specific section (using ClassSubjectTeacher assignments)
     let query;
     
-    if (teacher.classAssignments && teacher.classAssignments.length > 0) {
+    if (classAssignments && classAssignments.length > 0) {
+      // Use explicit ClassSubjectTeacher assignments for accurate matching
+      console.log('🎯 Using ClassSubjectTeacher assignments for query');
+      const orConditions = [{ classTeacher: teacher._id }];
+      
+      for (const assignment of classAssignments) {
+        orConditions.push({
+          $and: [
+            { className: assignment.className },
+            { section: assignment.section }
+          ]
+        });
+      }
+      
+      query = { $or: orConditions };
+    } else if (teacher.classAssignments && teacher.classAssignments.length > 0) {
       // Use explicit classAssignments for accurate matching
-      console.log('🎯 Using classAssignments for query');
+      console.log('🎯 Using legacy classAssignments for query');
       const orConditions = [{ classTeacher: teacher._id }];
       
       for (const assignment of teacher.classAssignments) {
@@ -465,13 +492,21 @@ export const getMyClasses = async (req, res) => {
       console.log(`  - ${cls.className}-${cls.section}: classTeacher=${cls.classTeacher?._id?.toString()}, isMyClass=${cls.classTeacher?._id?.toString() === teacher._id.toString()}`);
     });
 
-    // Enhance class data with teacher's role information
+    // Enhance class data with teacher's role information and assigned subjects
     const enhancedClasses = classes.map(cls => {
       const isClassTeacher = cls.classTeacher?._id?.toString() === teacher._id.toString();
       
-      // Check if teacher teaches this specific class-section using classAssignments
+      // Get assigned subjects from ClassSubjectTeacher
+      let assignedSubjects = [];
       let teachesSubject = false;
-      if (teacher.classAssignments && teacher.classAssignments.length > 0) {
+      
+      if (classAssignments && classAssignments.length > 0) {
+        const assignment = classAssignments.find(a => a.className === cls.className && a.section === cls.section);
+        if (assignment) {
+          assignedSubjects = assignment.subjects || [];
+          teachesSubject = assignedSubjects.length > 0;
+        }
+      } else if (teacher.classAssignments && teacher.classAssignments.length > 0) {
         const assignment = teacher.classAssignments.find(a => a.className === cls.className);
         teachesSubject = assignment && assignment.sections && assignment.sections.includes(cls.section);
       } else {
@@ -483,6 +518,7 @@ export const getMyClasses = async (req, res) => {
         ...cls,
         isClassTeacher,
         teachesSubject,
+        assignedSubjects: assignedSubjects, // Include assigned subjects from ClassSubjectTeacher
         teacherRole: isClassTeacher ? 'Class Teacher' : (teachesSubject ? 'Subject Teacher' : 'Other')
       };
     });

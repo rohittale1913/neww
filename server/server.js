@@ -29,6 +29,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import transportRoutes from './routes/transportRoutes.js';
 import classRoutes from './routes/classRoutes.js';
+import classAssignmentRoutes from './routes/classAssignmentRoutes.js';
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api/classes', classRoutes);
+app.use('/api/class-assignments', classAssignmentRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -125,7 +125,7 @@ const TeacherMyClasses = () => {
                     </span>
                   </div>
                   <p className="text-sm text-slate-500 mt-1">
-                    {cls.students?.length || 0} students • {cls.subjects?.length || 0} subjects
+                    {cls.students?.length || 0} students • {cls.assignedSubjects?.length || 0} subjects
                   </p>
                 </div>
               </div>
@@ -136,10 +136,27 @@ const TeacherMyClasses = () => {
 
             {expandedClass === idx && (
               <div className="border-t border-slate-200 bg-slate-50 px-6 py-4 space-y-4">
-                {/* Subjects */}
+                {/* Your Assigned Subjects (from ClassSubjectTeacher) */}
+                {cls.assignedSubjects && cls.assignedSubjects.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">📌 Your Assigned Subjects</p>
+                    <div className="flex flex-wrap gap-2">
+                      {cls.assignedSubjects.map((subject, sidx) => (
+                        <span
+                          key={sidx}
+                          className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700"
+                        >
+                          {subject.name || subject}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* All Class Subjects */}
                 {cls.subjects && cls.subjects.length > 0 && (
                   <div>
-                    <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Subjects</p>
+                    <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Class Subjects</p>
                     <div className="flex flex-wrap gap-2">
                       {cls.subjects.map((subject, sidx) => (
                         <span

@@ -64,14 +64,16 @@ const AdminTeacherAssignment = () => {
   };
 
   const handleClassSectionChange = async (className, section) => {
-    setFormData(prev => ({ ...prev, className, section }));
+    // Clear previous selections when class/section changes
+    setFormData(prev => ({ ...prev, className, section, teacherId: '', subjects: '' }));
+    setTeacherConstraintWarning('');
+    setSelectedTeacherSubjects([]);
     
     // Fetch available teachers for this class
     if (className && section) {
       try {
         const res = await classAssignmentAPI.getAvailableTeachers(className, section);
         setAvailableTeachers(res.data || []);
-        setTeacherConstraintWarning('');
       } catch (err) {
         console.error('Error fetching available teachers:', err);
       }
