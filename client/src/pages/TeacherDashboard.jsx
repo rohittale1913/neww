@@ -96,11 +96,11 @@ const TeacherDashboard = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
-            Welcome, {teacher?.name || user?.name || 'Teacher'}!
+            Welcome, {teacher?.name || user?.name || 'Teacher'} !
           </h1>
-          <p className="text-slate-500 text-sm mt-2">
+          {/* <p className="text-slate-500 text-sm mt-2">
             Manage your classes, track attendance, grade assignments, and view exams
-          </p>
+          </p> */}
         </div>
 
         {error && (

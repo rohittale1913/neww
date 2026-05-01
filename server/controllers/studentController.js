@@ -7,6 +7,7 @@ import Exam from '../models/Exam.js';
 import Result from '../models/Result.js';
 import Fee from '../models/Fee.js';
 import Class from '../models/Class.js';
+import ClassSubjectTeacher from '../models/ClassSubjectTeacher.js';
 
 // Get student by User ID (for logged-in student)
 export const getStudentByUserId = async (req, res) => {
@@ -42,17 +43,45 @@ export const getStudentProfileWithClassTeacher = async (req, res) => {
       return res.status(404).json({ message: 'Student profile not found' });
     }
     
-    // Find class teacher for this student's class
+    // Find the exact class record for this student's class-section
     let classTeacher = null;
-    if (student.class) {
-      classTeacher = await Teacher.findOne({
-        classTeacherOf: student.class,
-        isClassTeacher: true,
-        isActive: true
+    if (student.class && student.section) {
+      const classRecord = await Class.findOne({
+        className: student.class,
+        section: student.section
       })
-      .populate('userId', 'name email phone profileImage')
-      .select('teacherId userId name gender email phone experience qualification subjects classTeacherOf')
-      .lean();
+        .populate({
+          path: 'classTeacher',
+          select: 'teacherId userId name gender email phone experience qualification subjects classTeacherOf isClassTeacher isActive',
+          populate: {
+            path: 'userId',
+            select: 'name email phone profileImage'
+          }
+        })
+        .lean();
+
+      classTeacher = classRecord?.classTeacher || null;
+
+      // Backward-compatible fallback for older class records
+      if (!classTeacher) {
+        const classTeacherAssignment = await ClassSubjectTeacher.findOne({
+          className: student.class,
+          section: student.section,
+          assignmentType: 'class_teacher',
+          isActive: true
+        })
+          .populate({
+            path: 'teacherId',
+            select: 'teacherId userId name gender email phone experience qualification subjects classTeacherOf isClassTeacher isActive',
+            populate: {
+              path: 'userId',
+              select: 'name email phone profileImage'
+            }
+          })
+          .lean();
+
+        classTeacher = classTeacherAssignment?.teacherId?.isActive ? classTeacherAssignment.teacherId : null;
+      }
     }
     
     // Prepare response
@@ -649,21 +678,126 @@ export const getMySubjects = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const student = await Student.findOne({ userId });
+    const student = await Student.findOne({ userId }).lean();
     if (!student) {
       return res.status(404).json({ message: 'Student profile not found' });
     }
 
-    // Get class with subjects
-    const classData = await Class.findById(student.classId)
-      .populate('subjects', 'name code credits')
-      .lean();
+    const classQuery = student.classId
+      ? { _id: student.classId }
+      : student.class && student.section
+        ? { className: student.class, section: student.section }
+        : null;
 
-    if (!classData || !classData.subjects) {
-      return res.json({ subjects: [] });
+    // Get class with subjects for fallback display
+    const classData = classQuery
+      ? await Class.findOne(classQuery)
+        .populate('subjects', 'name code credits')
+        .lean()
+      : null;
+
+    // Get class-subject-teacher assignments for this exact class-section
+    const subjectAssignments = student.class && student.section
+      ? await ClassSubjectTeacher.find({
+        className: student.class,
+        section: student.section,
+        isActive: true
+      })
+        .populate({
+          path: 'teacherId',
+          select: 'teacherId userId name gender email phone experience qualification subjects classTeacherOf isClassTeacher isActive',
+          populate: {
+            path: 'userId',
+            select: 'name email phone profileImage'
+          }
+        })
+        .lean()
+      : [];
+
+    const subjectTeacherMap = new Map();
+
+    subjectAssignments.forEach((assignment) => {
+      const teacher = assignment.teacherId;
+      if (!teacher || !teacher.isActive) {
+        return;
+      }
+
+      const teacherName = teacher?.name || assignment.teacherName || 'N/A';
+      const teacherEmail = teacher?.email || teacher?.userId?.email || null;
+      const teacherPhone = teacher?.phone || teacher?.userId?.phone || null;
+      const teacherId = teacher?._id || teacher?.teacherId || null;
+
+      (assignment.subjects || []).forEach((subjectName) => {
+        if (!subjectTeacherMap.has(subjectName)) {
+          subjectTeacherMap.set(subjectName, {
+            subjectName,
+            teachers: []
+          });
+        }
+
+        const entry = subjectTeacherMap.get(subjectName);
+        entry.teachers.push({
+          teacherId,
+          teacherName,
+          email: teacherEmail,
+          phone: teacherPhone,
+          assignmentType: assignment.assignmentType
+        });
+      });
+    });
+
+    const subjectsWithTeachers = Array.from(subjectTeacherMap.values()).map((entry) => ({
+      ...entry,
+      teacherNames: entry.teachers.map((teacher) => teacher.teacherName),
+      teacherName: entry.teachers[0]?.teacherName || null,
+      assignmentType: entry.teachers[0]?.assignmentType || null
+    }));
+
+    const classSubjectNames = (classData?.subjects || [])
+      .map((subject) => subject.name || subject)
+      .filter(Boolean);
+
+    const mergedSubjectNames = [...new Set([
+      ...classSubjectNames,
+      ...subjectsWithTeachers.map((subject) => subject.subjectName)
+    ])];
+
+    const mergedSubjects = mergedSubjectNames.map((subjectName) => {
+      const assignedSubject = subjectTeacherMap.get(subjectName);
+
+      if (assignedSubject) {
+        return {
+          ...assignedSubject,
+          teacherNames: assignedSubject.teachers.map((teacher) => teacher.teacherName),
+          teacherName: assignedSubject.teachers[0]?.teacherName || null,
+          assignmentType: assignedSubject.teachers[0]?.assignmentType || null
+        };
+      }
+
+      return {
+        subjectName,
+        teachers: [],
+        teacherNames: [],
+        teacherName: null,
+        assignmentType: null
+      };
+    });
+
+    if (!mergedSubjects.length) {
+      return res.json({
+        subjects: [],
+        className: student.class || null,
+        section: student.section || null
+      });
     }
 
-    res.json({ subjects: classData.subjects || [] });
+    res.json({
+      subjects: mergedSubjects,
+      classSubjects: classData?.subjects || [],
+      className: student.class || classData?.className || null,
+      section: student.section || classData?.section || null,
+      classId: student.classId || classData?._id || null
+    });
   } catch (error) {
     console.error('Error fetching student subjects:', error);
     res.status(500).json({ message: error.message });

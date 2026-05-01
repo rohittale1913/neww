@@ -364,13 +364,28 @@ export const updateTeacher = async (req, res) => {
 // Delete teacher
 export const deleteTeacher = async (req, res) => {
   try {
-    const teacher = await Teacher.findByIdAndDelete(req.params.id);
+    const teacher = await Teacher.findById(req.params.id);
 
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
 
-    res.json({ message: 'Teacher deleted successfully', teacher });
+    // Remove all class assignments tied to this teacher so they no longer appear in student/teacher views.
+    const deletedAssignments = await ClassSubjectTeacher.deleteMany({ teacherId: teacher._id });
+
+    // Clear any direct class references to the deleted teacher.
+    await Class.updateMany(
+      { classTeacher: teacher._id },
+      { $set: { classTeacher: null, updatedAt: Date.now() } }
+    );
+
+    await Teacher.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: 'Teacher deleted successfully',
+      teacher,
+      deletedAssignments: deletedAssignments.deletedCount || 0
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -608,6 +623,8 @@ export const markAttendance = async (req, res) => {
       return res.status(404).json({ message: 'Teacher not found' });
     }
 
+    const classRecord = await Class.findOne({ className, section }).lean();
+
     const attendanceIds = [];
 
     for (const record of attendanceRecords) {
@@ -638,6 +655,7 @@ export const markAttendance = async (req, res) => {
             markedBy: req.user.id,
             className,
             section,
+            classId: classRecord?._id || existingAttendance.classId || null,
             teacherId: teacher._id
           },
           { new: true }
@@ -648,6 +666,7 @@ export const markAttendance = async (req, res) => {
           date: new Date(date),
           className,
           section,
+          classId: classRecord?._id || null,
           status,
           remarks: remarks || '',
           markedBy: req.user.id,

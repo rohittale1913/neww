@@ -145,7 +145,9 @@ export const getAllAssignments = async (req, res) => {
       .sort({ className: 1, section: 1, createdAt: -1 })
       .lean();
 
-    res.json(assignments);
+    const activeAssignments = assignments.filter((assignment) => assignment.teacherId && assignment.teacherId._id);
+
+    res.json(activeAssignments);
   } catch (error) {
     console.error('Error fetching assignments:', error);
     res.status(500).json({ message: error.message });

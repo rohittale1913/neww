@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { authAPI, studentAPI } from '../services/api';
-import { FiSearch, FiTrash2 } from 'react-icons/fi';
+import { FiSearch, FiTrash2, FiDownload } from 'react-icons/fi';
 import StudentProfileModal from '../components/StudentProfileModal';
 import EditStudentModal from '../components/EditStudentModal';
+import { exportToCSV } from '../utils/csvExport';
 
 const StudentUsersView = () => {
   const [students, setStudents] = useState([]);
@@ -14,6 +15,8 @@ const StudentUsersView = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -32,6 +35,7 @@ const StudentUsersView = () => {
     fetchStudents();
     const userId = localStorage.getItem('userId');
     setCurrentUserId(userId);
+    setCurrentPage(1);
   }, []);
 
   const fetchStudents = async () => {
@@ -142,6 +146,35 @@ const StudentUsersView = () => {
     return matchName && matchEmail && matchClass && matchSection && matchBlood;
   });
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedStudents = filteredStudents.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleExportCSV = () => {
+    const dataToExport = filteredStudents.map(student => ({
+      'Name': student.name,
+      'Email': student.email,
+      'Class': student.class || '-',
+      'Section': student.section || '-',
+      'Roll No.': student.rollNumber || '-',
+      'Blood Group': student.bloodGroup || '-',
+      'Phone': student.phone || '-',
+      'Status': student.isActive ? 'Active' : 'Inactive'
+    }));
+    exportToCSV(dataToExport, 'students');
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -225,6 +258,13 @@ const StudentUsersView = () => {
           >
             Reset Filters
           </button>
+          <button
+            onClick={handleExportCSV}
+            disabled={filteredStudents.length === 0}
+            className="mt-4 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            <FiDownload /> Export CSV
+          </button>
         </div>
 
         {/* Results */}
@@ -235,6 +275,7 @@ const StudentUsersView = () => {
           {loading ? (
             <p className="text-gray-600">Loading students...</p>
           ) : filteredStudents.length > 0 ? (
+            <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-blue-50 border-b">
@@ -251,7 +292,7 @@ const StudentUsersView = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student, idx) => (
+                  {paginatedStudents.map((student, idx) => (
                     <tr
                       key={student._id}
                       className={`border-b transition ${
@@ -297,6 +338,48 @@ const StudentUsersView = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredStudents.length)} of {filteredStudents.length} records
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = currentPage > 3 ? currentPage - 2 + i : i + 1;
+                    return pageNum <= totalPages ? (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ) : null;
+                  })}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           ) : (
             <p className="text-gray-600 text-center py-8">No students found matching filters.</p>
           )}

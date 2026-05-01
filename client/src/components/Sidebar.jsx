@@ -28,6 +28,7 @@ const Sidebar = ({ isOpen }) => {
 
   const studentMenuItems = [
     { icon: <FiClipboard />, label: 'Overview', path: '/student?tab=overview' },
+    { icon: <FiBook />, label: 'My Subjects', path: '/student?tab=subjects' },
     { icon: <FiCalendar />, label: 'Attendance', path: '/student?tab=attendance' },
     { icon: <FiFileText />, label: 'Assignments', path: '/student?tab=assignments' },
     { icon: <FiBarChart2 />, label: 'Exams', path: '/student?tab=exams' },

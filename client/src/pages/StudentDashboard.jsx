@@ -9,6 +9,7 @@ import StudentAssignments from '../components/StudentAssignments';
 import StudentExams from '../components/StudentExams';
 import StudentResults from '../components/StudentResults';
 import StudentFees from '../components/StudentFees';
+import StudentSubjects from '../components/StudentSubjects';
 
 const StudentDashboard = () => {
   const { user } = useAuthStore();
@@ -49,6 +50,7 @@ const StudentDashboard = () => {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: FiClipboard },
+    { id: 'subjects', label: 'My Subjects', icon: FiBookOpen },
     { id: 'attendance', label: 'Attendance', icon: FiCheckCircle },
     { id: 'assignments', label: 'Assignments', icon: FiBookOpen },
     { id: 'exams', label: 'Exams', icon: FiCalendar },
@@ -101,11 +103,11 @@ const StudentDashboard = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent">
-            Welcome, {studentProfile?.name || user?.name || 'Student'}!
+            Welcome, {studentProfile?.name || user?.name || 'Student'} !
           </h1>
-          <p className="text-slate-500 text-sm mt-2">
+          {/* <p className="text-slate-500 text-sm mt-2">
             Track your academic progress, attendance, assignments, and more
-          </p>
+          </p> */}
         </div>
 
         {error && (
@@ -226,6 +228,9 @@ const StudentDashboard = () => {
               </div>
             </div>
           )}
+
+          {/* Subjects Tab */}
+          {activeTab === 'subjects' && <StudentSubjects />}
 
           {/* Attendance Tab */}
           {activeTab === 'attendance' && <StudentAttendance />}

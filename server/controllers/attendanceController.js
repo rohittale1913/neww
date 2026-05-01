@@ -23,6 +23,16 @@ export const getAllAttendance = async (req, res) => {
       query.className = className;
     }
 
+    // Support filtering by section and by classId
+    if (req.query.section) {
+      query.section = req.query.section;
+    }
+
+    if (req.query.classId) {
+      // allow filtering by classId (ObjectId string)
+      query.classId = req.query.classId;
+    }
+
     const attendance = await Attendance.find(query)
       .populate('studentId', 'name rollNumber studentId email')
       .populate('markedBy', 'name email')

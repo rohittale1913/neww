@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { teacherAPI } from '../services/api';
-import { FiCalendar, FiCheck, FiX, FiClock, FiAlertTriangle } from 'react-icons/fi';
+import { FiCalendar, FiCheck, FiX, FiClock, FiAlertTriangle, FiDownload } from 'react-icons/fi';
+import { exportToCSV } from '../utils/csvExport';
 
 const TeacherAttendance = () => {
   const [classes, setClasses] = useState([]);
@@ -14,6 +15,8 @@ const TeacherAttendance = () => {
   const [studentRecords, setStudentRecords] = useState({});
   const [students, setStudents] = useState([]);
   const [marking, setMarking] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -41,6 +44,10 @@ const TeacherAttendance = () => {
 
     fetchClasses();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedClass, month, year]);
 
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -170,6 +177,25 @@ const TeacherAttendance = () => {
     }
   };
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedAttendance = attendance.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(attendance.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleExportAttendanceCSV = () => {
+    const dataToExport = attendance.map(record => ({
+      'Date': new Date(record.date).toLocaleDateString(),
+      'Student': record.studentId?.name || 'N/A',
+      'Status': record.status?.charAt(0).toUpperCase() + record.status?.slice(1) || 'N/A'
+    }));
+    exportToCSV(dataToExport, 'teacher-attendance');
+  };
+
   if (loading && attendance.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -283,7 +309,7 @@ const TeacherAttendance = () => {
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-bold text-slate-900">Attendance History</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Month</label>
             <select
@@ -311,6 +337,15 @@ const TeacherAttendance = () => {
               ))}
             </select>
           </div>
+          <div className="flex items-end">
+            <button
+              onClick={handleExportAttendanceCSV}
+              disabled={attendance.length === 0}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiDownload /> Export CSV
+            </button>
+          </div>
         </div>
 
         {attendance.length === 0 ? (
@@ -319,7 +354,8 @@ const TeacherAttendance = () => {
             <p className="mt-4 text-slate-600 font-medium">No attendance records found</p>
           </div>
         ) : (
-          <div className="max-h-96 overflow-y-auto rounded-lg border border-slate-200">
+           <div className="rounded-lg border border-slate-200">
+             <div className="max-h-96 overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 border-b border-slate-200 bg-slate-100">
                 <tr>
@@ -329,7 +365,7 @@ const TeacherAttendance = () => {
                 </tr>
               </thead>
               <tbody>
-                {attendance.map((record, idx) => (
+                {paginatedAttendance.map((record, idx) => (
                   <tr key={idx} className="border-b border-slate-200 hover:bg-slate-50">
                     <td className="px-4 py-3 text-slate-700">
                       {new Date(record.date).toLocaleDateString()}
@@ -347,7 +383,49 @@ const TeacherAttendance = () => {
                 ))}
               </tbody>
             </table>
-          </div>
+             </div>
+
+             {/* Pagination Controls */}
+             {totalPages > 1 && (
+               <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-t border-slate-200">
+                 <div className="text-sm text-slate-600">
+                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, attendance.length)} of {attendance.length} records
+                 </div>
+                 <div className="flex gap-2">
+                   <button
+                     onClick={() => handlePageChange(currentPage - 1)}
+                     disabled={currentPage === 1}
+                     className="px-3 py-1 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
+                   >
+                     Previous
+                   </button>
+                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                     const pageNum = currentPage > 3 ? currentPage - 2 + i : i + 1;
+                     return pageNum <= totalPages ? (
+                       <button
+                         key={pageNum}
+                         onClick={() => handlePageChange(pageNum)}
+                         className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
+                           currentPage === pageNum
+                             ? 'bg-blue-600 text-white'
+                             : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                         }`}
+                       >
+                         {pageNum}
+                       </button>
+                     ) : null;
+                   })}
+                   <button
+                     onClick={() => handlePageChange(currentPage + 1)}
+                     disabled={currentPage === totalPages}
+                     className="px-3 py-1 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
+                   >
+                     Next
+                   </button>
+                 </div>
+               </div>
+             )}
+           </div>
         )}
       </div>
     </div>

@@ -169,7 +169,11 @@ const StudentAttendance = () => {
                       })}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">
-                      {record.classId?.className || '-'}
+                      {record.classId?.className
+                        ? `${record.classId.className}${record.classId.section ? `-${record.classId.section}` : ''}`
+                        : record.className
+                          ? `${record.className}${record.section ? `-${record.section}` : ''}`
+                          : '-'}
                     </td>
                     <td className="px-6 py-4">
                       <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(record.status)}`}>
