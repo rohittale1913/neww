@@ -17,6 +17,7 @@ import StaffUsersView from './pages/StaffUsersView';
 import AdminAttendanceManagement from './pages/AdminAttendanceManagement';
 import FeeManagement from './pages/FeeManagement';
 import AdminExamsManagement from './pages/AdminExamsManagement';
+import AdminTeacherAssignment from './pages/AdminTeacherAssignment';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import AccountantDashboard from './pages/AccountantDashboard';
@@ -142,6 +143,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminExamsManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/class-assignments"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminTeacherAssignment />
             </ProtectedRoute>
           }
         />

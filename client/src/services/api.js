@@ -218,4 +218,20 @@ export const classAPI = {
   createTimetableEntry: (data) => api.post('/classes/timetable', data)
 };
 
+// Class Assignment APIs (for assigning teachers to classes with subjects)
+export const classAssignmentAPI = {
+  assignTeacher: (data) => api.post('/class-assignments/assign', data),
+  getAll: (filters = {}) => api.get('/class-assignments/all', { params: filters }),
+  getById: (assignmentId) => api.get(`/class-assignments/${assignmentId}`),
+  update: (assignmentId, data) => api.put(`/class-assignments/${assignmentId}`, data),
+  delete: (assignmentId) => api.delete(`/class-assignments/${assignmentId}`),
+  getAvailableTeachers: (className, section) => api.get('/class-assignments/available-teachers', { 
+    params: { className, section } 
+  }),
+  getAllClasses: () => api.get('/class-assignments/classes-sections'),
+  getClassStudents: (className, section) => api.get('/class-assignments/class-students', {
+    params: { className, section }
+  })
+};
+
 export default api;

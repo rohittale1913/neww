@@ -12,6 +12,7 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FiUsers />, label: 'View Students', path: '/admin/students-view' },
     { icon: <FiUsers />, label: 'View Teachers', path: '/admin/teachers-view' },
     { icon: <FiUsers />, label: 'View Staff', path: '/admin/staff-view' },
+    { icon: <FiBook />, label: 'Class Assignments', path: '/admin/class-assignments' },
     { icon: <FiCalendar />, label: 'Attendance', path: '/admin/attendance' },
     { icon: <FiDollarSign />, label: 'Fees', path: '/admin/fees' },
     { icon: <FiBarChart2 />, label: 'Exams', path: '/admin/exams' }

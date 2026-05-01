@@ -7,36 +7,11 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [subjects, setSubjects] = useState([]);
-  const [classAssignments, setClassAssignments] = useState([]);
-  const [selectedClass, setSelectedClass] = useState('');
-  const [selectedSections, setSelectedSections] = useState([]);
 
   useEffect(() => {
     if (teacher) {
       setFormData(teacher);
       setSubjects(teacher.subjects || []);
-      
-      // First check if teacher.classAssignments exists (new format)
-      if (teacher.classAssignments && teacher.classAssignments.length > 0) {
-        console.log('✅ Loading from classAssignments:', teacher.classAssignments);
-        setClassAssignments(teacher.classAssignments);
-      } else {
-        // Fallback to converting from old classes/sections arrays (backward compatibility)
-        const classes = teacher.classes || [];
-        const sections = teacher.sections || [];
-        
-        if (classes.length > 0) {
-          console.log('⚠️ Converting from old format - classes:', classes, 'sections:', sections);
-          // Create assignments where each class has all sections
-          const assignments = classes.map(cls => ({
-            className: cls,
-            sections: sections.length > 0 ? sections : []
-          }));
-          setClassAssignments(assignments);
-        } else {
-          setClassAssignments([]);
-        }
-      }
     }
   }, [teacher]);
 
@@ -60,30 +35,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
     });
   };
 
-  const handleAddClassAssignment = () => {
-    if (selectedClass && selectedSections.length > 0) {
-      setClassAssignments([
-        ...classAssignments,
-        { className: selectedClass, sections: selectedSections }
-      ]);
-      setSelectedClass('');
-      setSelectedSections([]);
-    }
-  };
 
-  const handleRemoveClassAssignment = (classToRemove) => {
-    setClassAssignments(classAssignments.filter(ca => ca.className !== classToRemove));
-  };
-
-  const handleAddSection = (section) => {
-    if (!selectedSections.includes(section)) {
-      setSelectedSections([...selectedSections, section]);
-    }
-  };
-
-  const handleRemoveSection = (section) => {
-    setSelectedSections(selectedSections.filter(s => s !== section));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,18 +58,6 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
         }
       }
 
-      console.log('📋 Sending to backend:', {
-        classAssignments,
-        classes: [...new Set(classAssignments.map(ca => ca.className))],
-        sections: [...new Set(classAssignments.flatMap(ca => ca.sections))]
-      });
-
-      console.log('📋 Sending to backend:', {
-        classAssignments,
-        classes: [...new Set(classAssignments.map(ca => ca.className))],
-        sections: [...new Set(classAssignments.flatMap(ca => ca.sections))]
-      });
-
       const response = await teacherAPI.update(teacherId, {
         name: formData.name,
         email: formData.email,
@@ -125,9 +65,6 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
         qualification: formData.qualification,
         experience: formData.experience,
         subjects: subjects,
-        classes: [...new Set(classAssignments.map(ca => ca.className))],
-        sections: [...new Set(classAssignments.flatMap(ca => ca.sections))],
-        classAssignments: classAssignments,
         employmentType: formData.employmentType,
         isClassTeacher: formData.isClassTeacher,
         classTeacherOf: formData.classTeacherOf,
@@ -330,134 +267,7 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Classes and Sections */}
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">
-              Class & Section Assignment <span className="text-red-500">*</span>
-            </h3>
-            
-            {/* Step 1: Select Class */}
-            <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
-              <p className="text-sm font-semibold text-slate-700 mb-2">Step 1: Select a Class</p>
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="">-- Select Class --</option>
-                {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
-                  .filter(cls => !classAssignments.some(ca => ca.className === cls))
-                  .map(cls => (
-                    <option key={cls} value={cls}>Class {cls}</option>
-                  ))}
-              </select>
-            </div>
 
-            {/* Step 2: Select Sections for the Class */}
-            {selectedClass && (
-              <div className="mb-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-                <p className="text-sm font-semibold text-slate-700 mb-3">Step 2: Select Sections for Class {selectedClass}</p>
-                <div className="flex gap-2 flex-wrap mb-3">
-                  {['A', 'B', 'C', 'D', 'E'].map(section => (
-                    <button
-                      key={section}
-                      type="button"
-                      onClick={() => handleAddSection(section)}
-                      className={`px-4 py-2 rounded-lg font-medium transition ${
-                        selectedSections.includes(section)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-blue-300 text-blue-600 hover:bg-blue-50'
-                      }`}
-                    >
-                      Section {section}
-                    </button>
-                  ))}
-                </div>
-                
-                {selectedSections.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleAddClassAssignment}
-                    className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition"
-                  >
-                    Add Class {selectedClass} with Section{selectedSections.length > 1 ? 's' : ''} {selectedSections.join(', ')}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Display Added Class Assignments */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-700">Added Class Assignments:</p>
-              {classAssignments.length > 0 ? (
-                classAssignments.map((assignment, idx) => (
-                  <div key={idx} className="bg-emerald-50 border border-emerald-300 rounded-lg p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-emerald-900">Class {assignment.className}</p>
-                      <p className="text-sm text-emerald-700">Sections: {assignment.sections.join(', ')}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveClassAssignment(assignment.className)}
-                      className="text-emerald-600 hover:text-emerald-800 font-bold text-xl"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-red-600">Please add at least one class with sections</p>
-              )}
-            </div>
-          </div>
-
-          {/* Class Teacher Assignment */}
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-200">
-              Class Teacher Assignment
-            </h3>
-            {classAssignments.length > 0 ? (
-              <div className="space-y-3">
-                <p className="text-sm text-slate-600">Select from assigned classes and sections:</p>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
-                  {classAssignments.map((assignment) => (
-                    assignment.sections.map(section => {
-                      const classTeacherValue = `${assignment.className}-${section}`; // Format: "10-A"
-                      return (
-                        <label key={classTeacherValue} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="classTeacherOf"
-                            value={classTeacherValue}
-                            checked={formData.classTeacherOf === classTeacherValue}
-                            onChange={handleInputChange}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm text-slate-700">Class {assignment.className} - Section {section}</span>
-                        </label>
-                      );
-                    })
-                  ))}
-                  <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-slate-300">
-                    <input
-                      type="radio"
-                      name="classTeacherOf"
-                      value=""
-                      checked={formData.classTeacherOf === ''}
-                      onChange={handleInputChange}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-sm text-slate-600 italic">Not a class teacher</span>
-                  </label>
-                </div>
-                {formData.classTeacherOf && (
-                  <p className="text-xs text-emerald-600">Selected as Class Teacher for: {formData.classTeacherOf}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">Please add classes and sections above first</p>
-            )}
-          </div>
 
           {/* Address */}
           <div>
