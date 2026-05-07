@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { studentAPI } from '../services/api';
-import { FiUpload, FiDownload, FiClock, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiUpload, FiDownload, FiClock, FiCheckCircle, FiAlertCircle, FiX, FiFile } from 'react-icons/fi';
 
 const StudentAssignments = () => {
   const [assignments, setAssignments] = useState([]);
@@ -10,7 +10,8 @@ const StudentAssignments = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [attachments, setAttachments] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     fetchAssignments();
@@ -29,23 +30,53 @@ const StudentAssignments = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(files);
+  };
+
+  const handleRemoveFile = (index) => {
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     if (!selectedAssignment) return;
+
+    if (selectedFiles.length === 0) {
+      setError('Please select at least one file to upload');
+      return;
+    }
 
     try {
       setSubmitting(true);
       setError('');
-      await studentAPI.submitAssignment(selectedAssignment._id, {
-        attachments
+      console.log('📤 Submitting assignment:', {
+        assignmentId: selectedAssignment._id,
+        fileCount: selectedFiles.length,
+        fileNames: selectedFiles.map(f => f.name),
+        fileSizes: selectedFiles.map(f => `${(f.size / 1024).toFixed(2)}KB`)
       });
+      
+      await studentAPI.submitAssignmentWithFiles(selectedAssignment._id, selectedFiles, (progress) => {
+        setUploadProgress(progress);
+      });
+      
+      console.log('✓ Submission successful');
       setShowSubmitModal(false);
-      setAttachments([]);
+      setSelectedFiles([]);
+      setUploadProgress(0);
       setSelectedAssignment(null);
       fetchAssignments();
     } catch (err) {
+      console.error('❌ Submission error:', {
+        status: err.response?.status,
+        message: err.response?.data?.message,
+        fullError: err.response?.data
+      });
       setError(err.response?.data?.message || 'Failed to submit assignment');
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -163,8 +194,24 @@ const StudentAssignments = () => {
                   <p className="text-sm font-medium text-green-700">
                     Submitted on {new Date(assignment.submission.submittedDate).toLocaleDateString('en-IN')}
                   </p>
+                  {assignment.submission.attachments && assignment.submission.attachments.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-sm font-medium text-green-700">Submitted Files:</p>
+                      {assignment.submission.attachments.map((file, idx) => (
+                        <a
+                          key={idx}
+                          href={file.downloadUrl}
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                          download
+                        >
+                          <FiFile className="w-4 h-4" />
+                          {file.originalName} ({(file.size / 1024).toFixed(2)} KB)
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   {assignment.submission.marksObtained !== undefined && (
-                    <p className="text-sm text-green-600 mt-1">
+                    <p className="text-sm text-green-600 mt-3">
                       Marks: <span className="font-bold">{assignment.submission.marksObtained}/{assignment.totalMarks}</span>
                     </p>
                   )}
@@ -196,41 +243,100 @@ const StudentAssignments = () => {
       {/* Submit Modal */}
       {showSubmitModal && selectedAssignment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
             <h3 className="text-xl font-bold text-slate-900 mb-4">
               Submit Assignment: {selectedAssignment.title}
             </h3>
 
             <div className="space-y-4">
+              {/* File Upload Area */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Attachments (URLs)
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  Upload Files (Max 5 files, 10MB each)
                 </label>
-                <textarea
-                  value={attachments.join('\n')}
-                  onChange={(e) => setAttachments(e.target.value.split('\n').filter(url => url.trim()))}
-                  placeholder="Enter file URLs (one per line)"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  rows="4"
-                />
+                <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.zip,.csv"
+                    className="hidden"
+                    id="file-input"
+                    disabled={submitting}
+                  />
+                  <label htmlFor="file-input" className="cursor-pointer">
+                    <FiUpload className="w-12 h-12 text-blue-400 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-slate-900">Click to upload or drag and drop</p>
+                    <p className="text-xs text-slate-500 mt-1">PDF, DOC, XLS, JPG, PNG, ZIP, etc.</p>
+                  </label>
+                </div>
               </div>
 
-              <div className="flex gap-3">
+              {/* Selected Files List */}
+              {selectedFiles.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-slate-700 mb-2">
+                    Selected Files ({selectedFiles.length})
+                  </p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <FiFile className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                            <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(2)} KB</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFile(index)}
+                          className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
+                          disabled={submitting}
+                        >
+                          <FiX className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Progress */}
+              {submitting && uploadProgress > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-700">Uploading...</span>
+                    <span className="text-sm font-medium text-slate-600">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => {
                     setShowSubmitModal(false);
-                    setAttachments([]);
+                    setSelectedFiles([]);
+                    setError('');
                   }}
-                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-slate-400 transition-colors"
+                  disabled={submitting || selectedFiles.length === 0}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-slate-400 transition-colors flex items-center justify-center gap-2"
                 >
-                  {submitting ? 'Submitting...' : 'Submit'}
+                  <FiUpload className="w-4 h-4" />
+                  {submitting ? 'Uploading...' : 'Submit'}
                 </button>
               </div>
             </div>

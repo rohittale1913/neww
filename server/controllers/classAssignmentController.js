@@ -312,13 +312,38 @@ export const getAvailableTeachersForClass = async (req, res) => {
   try {
     const { className, section } = req.query;
 
-    // Get all teachers
-    const allTeachers = await Teacher.find({ isActive: true })
+    if (!className || !section) {
+      return res.status(400).json({ 
+        message: 'className and section are required' 
+      });
+    }
+
+    // Get teachers assigned to this specific class and section
+    const classAssignments = await ClassSubjectTeacher.find({
+      className,
+      section,
+      isActive: true
+    })
+      .select('teacherId')
+      .lean();
+
+    const assignedTeacherIds = classAssignments.map(a => a.teacherId.toString());
+
+    // If no teachers assigned to this class, return empty array
+    if (assignedTeacherIds.length === 0) {
+      return res.json([]);
+    }
+
+    // Get the details of teachers assigned to this class
+    const availableTeachers = await Teacher.find({
+      _id: { $in: assignedTeacherIds },
+      isActive: true
+    })
       .populate('userId', 'name email')
       .select('name email teacherId subjects qualification experience isClassTeacher classTeacherOf')
       .lean();
 
-    // Get existing class teacher assignments for this class
+    // Get existing class teacher assignment for this class
     const classTeacherAssignment = await ClassSubjectTeacher.findOne({
       className,
       section,
@@ -336,8 +361,8 @@ export const getAvailableTeachersForClass = async (req, res) => {
       allClassTeacherAssignments.map(a => a.teacherId.toString())
     );
 
-    // Filter teachers
-    const availableTeachers = allTeachers.map(teacher => ({
+    // Enhance teacher data with constraint info
+    const enhancedTeachers = availableTeachers.map(teacher => ({
       ...teacher,
       canBeClassTeacher: !classTeacherTeacherIds.has(teacher._id.toString()) || 
                          (classTeacherAssignment?.teacherId?.toString() === teacher._id.toString()),
@@ -347,7 +372,7 @@ export const getAvailableTeachersForClass = async (req, res) => {
                                 classTeacherAssignment.teacherId.toString() !== teacher._id.toString())
     }));
 
-    res.json(availableTeachers);
+    res.json(enhancedTeachers);
   } catch (error) {
     console.error('Error fetching available teachers:', error);
     res.status(500).json({ message: error.message });

@@ -15,6 +15,13 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // For FormData requests, remove the JSON content-type header
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+    console.log('📋 FormData request detected - Content-Type header removed for proper multipart handling');
+  }
+  
   return config;
 });
 
@@ -83,6 +90,32 @@ export const studentAPI = {
   getMyAssignments: (filter) => api.get('/students/my-assignments', { params: { filter } }),
   getAssignmentDetail: (assignmentId) => api.get(`/students/my-assignments/${assignmentId}`),
   submitAssignment: (assignmentId, data) => api.post(`/students/my-assignments/${assignmentId}/submit`, data),
+  
+  // Submit assignment with file uploads
+  submitAssignmentWithFiles: async (assignmentId, files, onProgress) => {
+    const formData = new FormData();
+    
+    // Append files
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+    
+    console.log('📦 FormData prepared:');
+    console.log('  - Files:', files.length);
+    files.forEach((f, idx) => {
+      console.log(`    [${idx}] ${f.name} (${(f.size/1024).toFixed(2)}KB, ${f.type})`);
+    });
+    
+    return api.post(`/assignments/submit/${assignmentId}`, formData, {
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          if (onProgress) onProgress(percent);
+        }
+      }
+    });
+  },
+
   getMyExams: () => api.get('/students/my-exams'),
   getExamDetail: (examId) => api.get(`/students/my-exams/${examId}`),
   getMyResults: (params) => api.get('/students/my-results', { params }),
@@ -97,6 +130,7 @@ export const teacherAPI = {
   create: (data) => api.post('/teachers', data),
   update: (id, data) => api.put(`/teachers/${id}`, data),
   delete: (id) => api.delete(`/teachers/${id}`),
+  createAssignment: (data) => api.post('/assignments', data),
   // Teacher-specific endpoints
   getMyProfile: () => api.get('/teachers/my-profile'),
   getMyClasses: () => api.get('/teachers/my-classes'),
@@ -176,6 +210,7 @@ export const assignmentAPI = {
   getByClass: (classId) => api.get(`/assignments/class/${classId}`),
   submit: (data) => api.post('/assignments/submit', data),
   grade: (data) => api.post('/assignments/grade', data),
+  delete: (assignmentId) => api.delete(`/assignments/${assignmentId}`),
   getStudentSubmissions: (studentId) => api.get(`/assignments/student/${studentId}`)
 };
 
@@ -216,6 +251,12 @@ export const classAPI = {
   createSubject: (data) => api.post('/classes/subjects', data),
   getTimetable: (classId) => api.get(`/classes/timetable/${classId}`),
   createTimetableEntry: (data) => api.post('/classes/timetable', data)
+};
+
+// Subject APIs
+export const subjectAPI = {
+  getAll: () => api.get('/classes/subjects'),
+  create: (data) => api.post('/classes/subjects', data)
 };
 
 // Class Assignment APIs (for assigning teachers to classes with subjects)

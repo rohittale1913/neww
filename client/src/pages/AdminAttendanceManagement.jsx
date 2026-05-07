@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { attendanceAPI, studentAPI } from '../services/api';
+import { attendanceAPI, classAPI } from '../services/api';
 import { FiUsers, FiCheckCircle, FiX, FiCalendar, FiDownload } from 'react-icons/fi';
 import { exportToCSV } from '../utils/csvExport';
 
@@ -54,38 +54,34 @@ const AdminAttendanceManagement = () => {
   }, [selectedDate, selectedClass, selectedSection]);
 
   useEffect(() => {
-    // fetch class list for filters
     const fetchClasses = async () => {
       try {
-        const res = await studentAPI.getAll();
-        // fallback: there is a class API - use that
+        const response = await classAPI.getAll();
+        const classesData = Array.isArray(response.data) ? response.data : [];
+        setClasses(classesData);
       } catch (err) {
-        // ignore
+        console.error('Failed to fetch classes:', err);
+        setClasses([]);
       }
     };
 
-    const fetchFromClassesApi = async () => {
-      try {
-        const res = await attendanceAPI.getAllAttendance({ date: selectedDate });
-        // no-op, but keep for parity
-      } catch (err) {
-        // ignore
-      }
-    };
-
-    // Better: use classAPI to fetch classes
-    import('../services/api').then(({ classAPI }) => {
-      classAPI.getAll().then((r) => {
-        const cls = r.data || [];
-        setClasses(cls);
-        // If selectedClass already set, recompute sections
-        if (selectedClass) {
-          const secs = cls.filter(c => c.className === selectedClass).map(c => c.section);
-          setSections([...new Set(secs)]);
-        }
-      }).catch(() => {});
-    }).catch(() => {});
+    fetchClasses();
   }, []);
+
+  useEffect(() => {
+    const sourceClasses = Array.isArray(classes) ? classes : [];
+    const relevantClasses = selectedClass
+      ? sourceClasses.filter((item) => item.className === selectedClass)
+      : sourceClasses;
+
+    const uniqueSections = [...new Set(
+      relevantClasses
+        .map((item) => item.section)
+        .filter(Boolean)
+    )].sort();
+
+    setSections(uniqueSections);
+  }, [classes, selectedClass]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -201,9 +197,6 @@ const AdminAttendanceManagement = () => {
                     const cls = e.target.value;
                     setSelectedClass(cls);
                     setSelectedSection('');
-                    // compute sections
-                    const secs = classes.filter(c => c.className === cls).map(c => c.section);
-                    setSections([...new Set(secs)]);
                     // refetch attendance for new class
                     setLoading(true);
                     attendanceAPI.getAllAttendance({ date: selectedDate, className: cls }).then(res => {
@@ -214,7 +207,7 @@ const AdminAttendanceManagement = () => {
                   className="px-3 py-2 border rounded-lg bg-white"
                 >
                   <option value="">All Classes</option>
-                  {[...new Set(classes.map(c => c.className))].map(cn => (
+                  {[...new Set((Array.isArray(classes) ? classes : []).map(c => c.className).filter(Boolean))].map(cn => (
                     <option key={cn} value={cn}>{cn}</option>
                   ))}
                 </select>
@@ -236,7 +229,7 @@ const AdminAttendanceManagement = () => {
                   className="px-3 py-2 border rounded-lg bg-white"
                 >
                   <option value="">All Sections</option>
-                  {sections.map(s => (
+                  {(Array.isArray(sections) ? sections : []).map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>

@@ -66,8 +66,6 @@ const EditTeacherModal = ({ teacher, onClose, onSave }) => {
         experience: formData.experience,
         subjects: subjects,
         employmentType: formData.employmentType,
-        isClassTeacher: formData.isClassTeacher,
-        classTeacherOf: formData.classTeacherOf,
         gender: formData.gender,
         dateOfBirth: formData.dateOfBirth,
         bloodGroup: formData.bloodGroup,

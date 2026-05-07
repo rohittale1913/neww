@@ -388,4 +388,4 @@ For queries or support, reach out to: rohit.tale1913@gmail.com
 
 ---
 
-**Happy Coding! Build something amazing with School ERP.** 🚀
+

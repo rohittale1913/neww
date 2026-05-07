@@ -14,8 +14,6 @@ const AdminTeacherRegister = () => {
     subjects: [],
     experience: '',
     employmentType: 'full-time',
-    isClassTeacher: false,
-    classTeacherOf: '',
     dateOfBirth: '',
     gender: '',
     address: '',
@@ -29,21 +27,7 @@ const AdminTeacherRegister = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
-    
-    setTeacherData(prev => {
-      const updated = { ...prev, [name]: newValue };
-      
-      // If classTeacherOf is set, automatically set isClassTeacher to true
-      if (name === 'classTeacherOf' && value) {
-        updated.isClassTeacher = true;
-      }
-      // If classTeacherOf is cleared, set isClassTeacher to false
-      if (name === 'classTeacherOf' && !value) {
-        updated.isClassTeacher = false;
-      }
-      
-      return updated;
-    });
+    setTeacherData(prev => ({ ...prev, [name]: newValue }));
   };
 
   const handleSubjectChange = (subject) => {
@@ -91,8 +75,6 @@ const AdminTeacherRegister = () => {
         subjects: teacherData.subjects,
         experience: parseInt(teacherData.experience) || 0,
         employmentType: teacherData.employmentType,
-        isClassTeacher: teacherData.isClassTeacher,
-        classTeacherOf: teacherData.classTeacherOf,
         dateOfBirth: teacherData.dateOfBirth,
         gender: teacherData.gender,
         address: teacherData.address,
@@ -338,20 +320,6 @@ const AdminTeacherRegister = () => {
                     <option value="contract">Contract</option>
                   </select>
                 </div>
-
-
-              </div>
-
-              <div className="mt-4 flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="isClassTeacher"
-                  id="isClassTeacher"
-                  checked={teacherData.isClassTeacher}
-                  onChange={handleChange}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="isClassTeacher" className="text-sm font-semibold text-slate-700">Is Class Teacher</label>
               </div>
             </div>
 

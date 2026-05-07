@@ -1,13 +1,13 @@
 import Student from '../models/Student.js';
+import Attendance from '../models/Attendance.js';
 import User from '../models/User.js';
 import Teacher from '../models/Teacher.js';
-import Attendance from '../models/Attendance.js';
+import ClassSubjectTeacher from '../models/ClassSubjectTeacher.js';
 import Assignment from '../models/Assignment.js';
 import Exam from '../models/Exam.js';
 import Result from '../models/Result.js';
 import Fee from '../models/Fee.js';
 import Class from '../models/Class.js';
-import ClassSubjectTeacher from '../models/ClassSubjectTeacher.js';
 
 // Get student by User ID (for logged-in student)
 export const getStudentByUserId = async (req, res) => {
@@ -43,44 +43,32 @@ export const getStudentProfileWithClassTeacher = async (req, res) => {
       return res.status(404).json({ message: 'Student profile not found' });
     }
     
-    // Find the exact class record for this student's class-section
+    // Find class teacher for this student's class/section from active assignments
     let classTeacher = null;
-    if (student.class && student.section) {
-      const classRecord = await Class.findOne({
+    if (student.class) {
+      // Look for active class teacher assignment in ClassSubjectTeacher
+      const classTeacherAssignment = await ClassSubjectTeacher.findOne({
         className: student.class,
-        section: student.section
+        section: student.section,
+        assignmentType: 'class_teacher',
+        isActive: true
       })
         .populate({
-          path: 'classTeacher',
-          select: 'teacherId userId name gender email phone experience qualification subjects classTeacherOf isClassTeacher isActive',
+          path: 'teacherId',
           populate: {
             path: 'userId',
             select: 'name email phone profileImage'
           }
         })
+        .select('teacherId')
         .lean();
 
-      classTeacher = classRecord?.classTeacher || null;
-
-      // Backward-compatible fallback for older class records
-      if (!classTeacher) {
-        const classTeacherAssignment = await ClassSubjectTeacher.findOne({
-          className: student.class,
-          section: student.section,
-          assignmentType: 'class_teacher',
-          isActive: true
-        })
-          .populate({
-            path: 'teacherId',
-            select: 'teacherId userId name gender email phone experience qualification subjects classTeacherOf isClassTeacher isActive',
-            populate: {
-              path: 'userId',
-              select: 'name email phone profileImage'
-            }
-          })
-          .lean();
-
-        classTeacher = classTeacherAssignment?.teacherId?.isActive ? classTeacherAssignment.teacherId : null;
+      if (classTeacherAssignment && classTeacherAssignment.teacherId) {
+        classTeacher = {
+          ...classTeacherAssignment.teacherId,
+          email: classTeacherAssignment.teacherId.userId?.email || classTeacherAssignment.teacherId.email,
+          phone: classTeacherAssignment.teacherId.userId?.phone || classTeacherAssignment.teacherId.phone
+        };
       }
     }
     
@@ -93,6 +81,468 @@ export const getStudentProfileWithClassTeacher = async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error('Error fetching student profile with class teacher:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get logged-in student's assigned subjects
+export const getMySubjects = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const student = await Student.findOne({ userId })
+      .select('class section')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const assignments = await ClassSubjectTeacher.find({
+      className: student.class,
+      section: student.section,
+      assignmentType: 'subject_teacher',
+      isActive: true
+    })
+      .populate({
+        path: 'teacherId',
+        populate: {
+          path: 'userId',
+          select: 'name email phone profileImage'
+        }
+      })
+      .lean();
+
+    const groupedSubjects = new Map();
+
+    assignments.forEach((assignment) => {
+      const teacherName = assignment.teacherName || assignment.teacherId?.name || 'N/A';
+      const email = assignment.teacherId?.userId?.email || '';
+      const phone = assignment.teacherId?.userId?.phone || '';
+
+      (assignment.subjects || []).forEach((subjectName) => {
+        if (!groupedSubjects.has(subjectName)) {
+          groupedSubjects.set(subjectName, {
+            subjectName,
+            teachers: [],
+            teacherNames: []
+          });
+        }
+
+        const subjectEntry = groupedSubjects.get(subjectName);
+        subjectEntry.teachers.push({
+          teacherName,
+          email,
+          phone,
+          assignmentType: assignment.assignmentType
+        });
+        subjectEntry.teacherNames.push(teacherName);
+      });
+    });
+
+    res.json({
+      className: student.class,
+      section: student.section,
+      subjects: Array.from(groupedSubjects.values())
+    });
+  } catch (error) {
+    console.error('Error fetching student subjects:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get logged-in student's attendance summary and records
+export const getMyAttendance = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { month, year } = req.query;
+
+    const student = await Student.findOne({ userId })
+      .select('_id class section')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const currentDate = new Date();
+    const targetMonth = month ? parseInt(month, 10) : currentDate.getMonth() + 1;
+    const targetYear = year ? parseInt(year, 10) : currentDate.getFullYear();
+
+    const startDate = new Date(targetYear, targetMonth - 1, 1);
+    const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+
+    const attendance = await Attendance.find({
+      studentId: student._id,
+      date: { $gte: startDate, $lte: endDate }
+    })
+      .populate('classId', 'className section')
+      .populate('teacherId', 'name teacherId')
+      .lean()
+      .sort({ date: -1 });
+
+    const summary = {
+      totalDays: attendance.length,
+      presentDays: attendance.filter((record) => record.status === 'present').length,
+      absentDays: attendance.filter((record) => record.status === 'absent').length,
+      leaveDays: attendance.filter((record) => record.status === 'leave').length,
+      lateDays: attendance.filter((record) => record.status === 'late').length,
+      attendancePercentage: attendance.length > 0
+        ? (((attendance.filter((record) => record.status === 'present' || record.status === 'late').length) / attendance.length) * 100).toFixed(2)
+        : '0.00'
+    };
+
+    res.json({
+      attendance,
+      summary,
+      className: student.class,
+      section: student.section,
+      month: targetMonth,
+      year: targetYear
+    });
+  } catch (error) {
+    console.error('Error fetching student attendance:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get logged-in student's assignments
+export const getMyAssignments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { filter } = req.query;
+
+    const student = await Student.findOne({ userId })
+      .select('_id class section')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const now = new Date();
+    console.log('\n=== STUDENT ASSIGNMENTS DEBUG ===');
+    console.log('Current Time:', now);
+    console.log('Student Class:', student.class, 'Section:', student.section);
+    
+    // Check all assignments for this class first (before deadline filter)
+    const allAssignmentsForClass = await Assignment.find({
+      className: student.class,
+      section: student.section
+    }).lean();
+    console.log('Total assignments for class:', allAssignmentsForClass.length);
+    allAssignmentsForClass.forEach(a => {
+      console.log(`  - ${a.title}: dueDate=${new Date(a.dueDate).toISOString()} (${new Date(a.dueDate) > now ? 'FUTURE' : 'PAST'})`);
+    });
+    
+    const assignments = await Assignment.find({
+      className: student.class,
+      section: student.section,
+      dueDate: { $gt: now }  // Only show assignments with future due dates
+    })
+      .populate('teacherId', 'name email')
+      .populate('subject', 'name code')
+      .lean()
+      .sort({ dueDate: -1 });
+
+    console.log('Assignments after deadline filter:', assignments.length);
+    assignments.forEach(a => {
+      console.log(`  - ${a.title}: dueDate=${new Date(a.dueDate).toISOString()}`);
+    });
+    console.log('=== END DEBUG ===\n');
+
+    const mappedAssignments = assignments.map((assignment) => {
+      const submission = (assignment.submissions || []).find(
+        (entry) => entry.studentId?.toString() === student._id.toString()
+      );
+
+      const daysUntilDue = Math.ceil((new Date(assignment.dueDate) - now) / (1000 * 60 * 60 * 24));
+      const isOverdue = !submission && new Date(assignment.dueDate) < now;
+      const submissionStatus = submission
+        ? submission.marksObtained !== undefined
+          ? 'graded'
+          : 'submitted'
+        : 'pending';
+
+      return {
+        ...assignment,
+        daysUntilDue,
+        isOverdue,
+        submissionStatus,
+        submission: submission || null
+      };
+    }).filter((assignment) => {
+      if (!filter || filter === 'all') return true;
+      if (filter === 'pending') return assignment.submissionStatus === 'pending';
+      if (filter === 'submitted') return assignment.submissionStatus === 'submitted';
+      if (filter === 'graded') return assignment.submissionStatus === 'graded';
+      return true;
+    });
+
+    res.json({ assignments: mappedAssignments });
+  } catch (error) {
+    console.error('Error fetching student assignments:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get a single assignment for the logged-in student
+export const getMyAssignmentDetail = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { assignmentId } = req.params;
+
+    const student = await Student.findOne({ userId })
+      .select('_id class section')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const assignment = await Assignment.findOne({
+      _id: assignmentId,
+      className: student.class,
+      section: student.section
+    })
+      .populate('teacherId', 'name email')
+      .populate('subject', 'name code')
+      .lean();
+
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    const submission = (assignment.submissions || []).find(
+      (entry) => entry.studentId?.toString() === student._id.toString()
+    );
+
+    const now = new Date();
+    const daysUntilDue = Math.ceil((new Date(assignment.dueDate) - now) / (1000 * 60 * 60 * 24));
+    const isOverdue = !submission && new Date(assignment.dueDate) < now;
+    const submissionStatus = submission
+      ? submission.marksObtained !== undefined
+        ? 'graded'
+        : 'submitted'
+      : 'pending';
+
+    res.json({
+      ...assignment,
+      daysUntilDue,
+      isOverdue,
+      submissionStatus,
+      submission: submission || null
+    });
+  } catch (error) {
+    console.error('Error fetching student assignment detail:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Submit assignment from the legacy student assignment detail page
+export const submitMyAssignment = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { assignmentId } = req.params;
+    const { attachments = [] } = req.body;
+
+    const student = await Student.findOne({ userId })
+      .select('_id name rollNumber class section')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const assignment = await Assignment.findOne({
+      _id: assignmentId,
+      className: student.class,
+      section: student.section
+    });
+
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    const normalizedAttachments = (Array.isArray(attachments) ? attachments : [attachments])
+      .filter(Boolean)
+      .map((item) => {
+        const attachmentUrl = String(item);
+        const fileName = attachmentUrl.split('/').pop()?.split('?')[0] || 'attachment';
+
+        return {
+          filename: fileName,
+          originalName: fileName,
+          filepath: attachmentUrl,
+          downloadUrl: attachmentUrl,
+          size: 0,
+          mimeType: 'text/plain',
+          uploadedAt: new Date()
+        };
+      });
+
+    if (normalizedAttachments.length === 0) {
+      return res.status(400).json({ message: 'Please add at least one attachment' });
+    }
+
+    const submission = {
+      studentId: student._id,
+      studentName: student.name,
+      studentRollNumber: student.rollNumber,
+      submittedAt: Date.now(),
+      submittedDate: new Date(),
+      attachments: normalizedAttachments,
+      isLate: new Date() > new Date(assignment.dueDate)
+    };
+
+    const existingIndex = assignment.submissions.findIndex(
+      (entry) => entry.studentId.toString() === student._id.toString()
+    );
+
+    if (existingIndex >= 0) {
+      assignment.submissions[existingIndex] = submission;
+    } else {
+      assignment.submissions.push(submission);
+    }
+
+    await assignment.save();
+
+    res.json({
+      message: 'Assignment submitted successfully',
+      submission
+    });
+  } catch (error) {
+    console.error('Error submitting student assignment:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get logged-in student's exams
+export const getMyExams = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const student = await Student.findOne({ userId })
+      .select('class section')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const classDoc = await Class.findOne({ className: student.class, section: student.section })
+      .select('_id')
+      .lean();
+
+    const exams = await Exam.find({ classId: classDoc?._id })
+      .populate('classId', 'className section')
+      .populate('subjects', 'name code')
+      .lean()
+      .sort({ startDate: -1 });
+
+    const now = new Date();
+    const mappedExams = exams.map((exam) => {
+      let status = 'upcoming';
+      if (now >= new Date(exam.startDate) && now <= new Date(exam.endDate)) {
+        status = 'ongoing';
+      } else if (now > new Date(exam.endDate)) {
+        status = 'completed';
+      }
+
+      const daysUntilExam = Math.ceil((new Date(exam.startDate) - now) / (1000 * 60 * 60 * 24));
+
+      return {
+        ...exam,
+        status,
+        daysUntilExam: status === 'upcoming' ? Math.max(daysUntilExam, 0) : 0
+      };
+    });
+
+    res.json({ exams: mappedExams });
+  } catch (error) {
+    console.error('Error fetching student exams:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get logged-in student's results
+export const getMyResults = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const student = await Student.findOne({ userId })
+      .select('_id')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const results = await Result.find({ studentId: student._id })
+      .populate('examId', 'examName examType')
+      .populate('subject', 'name code')
+      .lean()
+      .sort({ createdAt: -1 });
+
+    const totalExams = results.length;
+    const averagePercentage = totalExams > 0
+      ? (results.reduce((sum, result) => sum + (result.percentage || 0), 0) / totalExams).toFixed(2)
+      : '0.00';
+    const passed = results.filter((result) => (result.percentage || 0) >= 60).length;
+    const failed = totalExams - passed;
+
+    res.json({
+      results,
+      summary: {
+        totalExams,
+        averagePercentage,
+        passed,
+        failed
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching student results:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get logged-in student's fees
+export const getMyFees = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status } = req.query;
+
+    const student = await Student.findOne({ userId })
+      .select('_id')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const feeQuery = { studentId: student._id };
+    if (status && status !== 'all') {
+      feeQuery.status = status;
+    }
+
+    const fees = await Fee.find(feeQuery)
+      .lean()
+      .sort({ dueDate: -1 });
+
+    const totalAmount = fees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    const paidAmount = fees.filter((fee) => fee.status === 'paid').reduce((sum, fee) => sum + (fee.amount || 0), 0);
+    const dueAmount = totalAmount - paidAmount;
+
+    res.json({
+      fees,
+      summary: {
+        totalAmount,
+        paidAmount,
+        dueAmount
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching student fees:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -337,471 +787,20 @@ export const deleteStudent = async (req, res) => {
   }
 };
 
-// ==================== STUDENT MODULE ENDPOINTS ====================
-
-// Get student's attendance records
-export const getMyAttendance = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { month, year } = req.query;
-
-    // Get student profile
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    let query = { studentId: student._id };
-
-    // Filter by month and year if provided
-    if (month && year) {
-      const startDate = new Date(year, parseInt(month) - 1, 1);
-      const endDate = new Date(year, parseInt(month), 0);
-      query.date = { $gte: startDate, $lte: endDate };
-    }
-
-    const attendance = await Attendance.find(query)
-      .populate('classId', 'className section')
-      .sort({ date: -1 })
-      .lean();
-
-    // Calculate attendance summary
-    const summary = {
-      totalDays: attendance.length,
-      presentDays: attendance.filter(a => a.status === 'present').length,
-      absentDays: attendance.filter(a => a.status === 'absent').length,
-      leaveDays: attendance.filter(a => a.status === 'leave').length,
-      lateDays: attendance.filter(a => a.status === 'late').length,
-      attendancePercentage: attendance.length > 0 
-        ? ((attendance.filter(a => a.status === 'present').length / attendance.length) * 100).toFixed(2)
-        : 0
-    };
-
-    res.json({ attendance, summary });
-  } catch (error) {
-    console.error('Error fetching student attendance:', error);
-    res.status(500).json({ message: error.message });
-  }
+export default { 
+  getAllStudents, 
+  getStudentById, 
+  createStudent, 
+  updateStudent, 
+  deleteStudent,
+  getStudentByUserId,
+  getStudentProfileWithClassTeacher,
+  getMySubjects,
+  getMyAttendance,
+  getMyAssignments,
+  getMyAssignmentDetail,
+  submitMyAssignment,
+  getMyExams,
+  getMyResults,
+  getMyFees
 };
-
-// Get student's assignments
-export const getMyAssignments = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { filter } = req.query; // 'pending', 'submitted', 'graded', 'all'
-
-    // Get student profile
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    // Get all assignments for student's class
-    const assignments = await Assignment.find({ classId: student.classId || null })
-      .populate('teacherId', 'name email')
-      .populate('subject', 'name')
-      .lean();
-
-    // Enhance with submission status
-    const assignmentsWithStatus = assignments.map(assignment => {
-      const submission = assignment.submissions?.find(s => s.studentId?.toString() === student._id.toString());
-      return {
-        ...assignment,
-        submissionStatus: submission ? 'submitted' : 'pending',
-        submission: submission || null,
-        isOverdue: new Date(assignment.dueDate) < new Date() && !submission,
-        daysUntilDue: Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24))
-      };
-    });
-
-    // Apply filter
-    let filtered = assignmentsWithStatus;
-    if (filter === 'pending') {
-      filtered = assignmentsWithStatus.filter(a => a.submissionStatus === 'pending');
-    } else if (filter === 'submitted') {
-      filtered = assignmentsWithStatus.filter(a => a.submissionStatus === 'submitted');
-    } else if (filter === 'graded') {
-      filtered = assignmentsWithStatus.filter(a => a.submission?.marksObtained !== undefined);
-    }
-
-    res.json({ assignments: filtered, total: filtered.length });
-  } catch (error) {
-    console.error('Error fetching student assignments:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get assignment details
-export const getAssignmentDetail = async (req, res) => {
-  try {
-    const { assignmentId } = req.params;
-    const userId = req.user.id;
-
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    const assignment = await Assignment.findById(assignmentId)
-      .populate('teacherId', 'name email')
-      .populate('subject', 'name')
-      .lean();
-
-    if (!assignment) {
-      return res.status(404).json({ message: 'Assignment not found' });
-    }
-
-    const submission = assignment.submissions?.find(s => s.studentId?.toString() === student._id.toString());
-
-    const response = {
-      ...assignment,
-      submission: submission || null,
-      submissionStatus: submission ? 'submitted' : 'pending'
-    };
-
-    res.json(response);
-  } catch (error) {
-    console.error('Error fetching assignment details:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Submit assignment
-export const submitMyAssignment = async (req, res) => {
-  try {
-    const { assignmentId, attachments } = req.body;
-    const userId = req.user.id;
-
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    const assignment = await Assignment.findById(assignmentId);
-    if (!assignment) {
-      return res.status(404).json({ message: 'Assignment not found' });
-    }
-
-    if (new Date() > new Date(assignment.dueDate)) {
-      return res.status(400).json({ message: 'Assignment deadline has passed' });
-    }
-
-    // Check if already submitted
-    const existingIndex = assignment.submissions.findIndex(
-      s => s.studentId.toString() === student._id.toString()
-    );
-
-    const submission = {
-      studentId: student._id,
-      submittedAt: new Date(),
-      submittedDate: new Date(),
-      attachments: attachments || []
-    };
-
-    if (existingIndex >= 0) {
-      assignment.submissions[existingIndex] = submission;
-    } else {
-      assignment.submissions.push(submission);
-    }
-
-    await assignment.save();
-
-    res.json({ message: 'Assignment submitted successfully', submission });
-  } catch (error) {
-    console.error('Error submitting assignment:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get student's exams
-export const getMyExams = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    // Get student profile
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    // Get exams for student's class
-    const exams = await Exam.find({ classId: student.classId || null })
-      .populate('subjects', 'name code')
-      .sort({ startDate: 1 })
-      .lean();
-
-    // Add exam status
-    const examsWithStatus = exams.map(exam => {
-      const now = new Date();
-      let status = 'upcoming';
-      if (new Date(exam.startDate) <= now && now <= new Date(exam.endDate)) {
-        status = 'ongoing';
-      } else if (new Date(exam.endDate) < now) {
-        status = 'completed';
-      }
-
-      return {
-        ...exam,
-        status,
-        daysUntilExam: Math.ceil((new Date(exam.startDate) - now) / (1000 * 60 * 60 * 24))
-      };
-    });
-
-    res.json({ exams: examsWithStatus, total: examsWithStatus.length });
-  } catch (error) {
-    console.error('Error fetching student exams:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get exam details
-export const getExamDetail = async (req, res) => {
-  try {
-    const { examId } = req.params;
-    const userId = req.user.id;
-
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    const exam = await Exam.findById(examId)
-      .populate('subjects', 'name code')
-      .lean();
-
-    if (!exam) {
-      return res.status(404).json({ message: 'Exam not found' });
-    }
-
-    const now = new Date();
-    let status = 'upcoming';
-    if (new Date(exam.startDate) <= now && now <= new Date(exam.endDate)) {
-      status = 'ongoing';
-    } else if (new Date(exam.endDate) < now) {
-      status = 'completed';
-    }
-
-    const response = {
-      ...exam,
-      status,
-      daysUntilExam: Math.ceil((new Date(exam.startDate) - now) / (1000 * 60 * 60 * 24))
-    };
-
-    res.json(response);
-  } catch (error) {
-    console.error('Error fetching exam details:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get student's results
-export const getMyResults = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { examId } = req.query;
-
-    // Get student profile
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    let query = { studentId: student._id };
-    if (examId) {
-      query.examId = examId;
-    }
-
-    const results = await Result.find(query)
-      .populate('examId', 'examName examType')
-      .populate('subject', 'name')
-      .sort({ createdAt: -1 })
-      .lean();
-
-    // Calculate summary
-    const summary = {
-      totalExams: results.length,
-      averagePercentage: results.length > 0 
-        ? (results.reduce((sum, r) => sum + (r.percentage || 0), 0) / results.length).toFixed(2)
-        : 0,
-      passed: results.filter(r => r.grade && ['A', 'B', 'C', 'D'].includes(r.grade)).length,
-      failed: results.filter(r => r.grade === 'F').length
-    };
-
-    res.json({ results, summary });
-  } catch (error) {
-    console.error('Error fetching student results:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get student's fees
-export const getMyFees = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { status } = req.query;
-
-    // Get student profile
-    const student = await Student.findOne({ userId });
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    let query = { studentId: student._id };
-    if (status) {
-      query.status = status;
-    }
-
-    const fees = await Fee.find(query)
-      .sort({ dueDate: 1 })
-      .lean();
-
-    // Calculate summary
-    const summary = {
-      totalFees: fees.length,
-      pending: fees.filter(f => f.status === 'pending').length,
-      paid: fees.filter(f => f.status === 'paid').length,
-      overdue: fees.filter(f => f.status === 'overdue').length,
-      totalAmount: fees.reduce((sum, f) => sum + (f.amount || 0), 0),
-      paidAmount: fees.filter(f => f.status === 'paid').reduce((sum, f) => sum + (f.amount || 0), 0),
-      dueAmount: fees.filter(f => ['pending', 'overdue', 'partially_paid'].includes(f.status)).reduce((sum, f) => sum + (f.amount || 0), 0)
-    };
-
-    res.json({ fees, summary });
-  } catch (error) {
-    console.error('Error fetching student fees:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get subject list for student
-export const getMySubjects = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const student = await Student.findOne({ userId }).lean();
-    if (!student) {
-      return res.status(404).json({ message: 'Student profile not found' });
-    }
-
-    const classQuery = student.classId
-      ? { _id: student.classId }
-      : student.class && student.section
-        ? { className: student.class, section: student.section }
-        : null;
-
-    // Get class with subjects for fallback display
-    const classData = classQuery
-      ? await Class.findOne(classQuery)
-        .populate('subjects', 'name code credits')
-        .lean()
-      : null;
-
-    // Get class-subject-teacher assignments for this exact class-section
-    const subjectAssignments = student.class && student.section
-      ? await ClassSubjectTeacher.find({
-        className: student.class,
-        section: student.section,
-        isActive: true
-      })
-        .populate({
-          path: 'teacherId',
-          select: 'teacherId userId name gender email phone experience qualification subjects classTeacherOf isClassTeacher isActive',
-          populate: {
-            path: 'userId',
-            select: 'name email phone profileImage'
-          }
-        })
-        .lean()
-      : [];
-
-    const subjectTeacherMap = new Map();
-
-    subjectAssignments.forEach((assignment) => {
-      const teacher = assignment.teacherId;
-      if (!teacher || !teacher.isActive) {
-        return;
-      }
-
-      const teacherName = teacher?.name || assignment.teacherName || 'N/A';
-      const teacherEmail = teacher?.email || teacher?.userId?.email || null;
-      const teacherPhone = teacher?.phone || teacher?.userId?.phone || null;
-      const teacherId = teacher?._id || teacher?.teacherId || null;
-
-      (assignment.subjects || []).forEach((subjectName) => {
-        if (!subjectTeacherMap.has(subjectName)) {
-          subjectTeacherMap.set(subjectName, {
-            subjectName,
-            teachers: []
-          });
-        }
-
-        const entry = subjectTeacherMap.get(subjectName);
-        entry.teachers.push({
-          teacherId,
-          teacherName,
-          email: teacherEmail,
-          phone: teacherPhone,
-          assignmentType: assignment.assignmentType
-        });
-      });
-    });
-
-    const subjectsWithTeachers = Array.from(subjectTeacherMap.values()).map((entry) => ({
-      ...entry,
-      teacherNames: entry.teachers.map((teacher) => teacher.teacherName),
-      teacherName: entry.teachers[0]?.teacherName || null,
-      assignmentType: entry.teachers[0]?.assignmentType || null
-    }));
-
-    const classSubjectNames = (classData?.subjects || [])
-      .map((subject) => subject.name || subject)
-      .filter(Boolean);
-
-    const mergedSubjectNames = [...new Set([
-      ...classSubjectNames,
-      ...subjectsWithTeachers.map((subject) => subject.subjectName)
-    ])];
-
-    const mergedSubjects = mergedSubjectNames.map((subjectName) => {
-      const assignedSubject = subjectTeacherMap.get(subjectName);
-
-      if (assignedSubject) {
-        return {
-          ...assignedSubject,
-          teacherNames: assignedSubject.teachers.map((teacher) => teacher.teacherName),
-          teacherName: assignedSubject.teachers[0]?.teacherName || null,
-          assignmentType: assignedSubject.teachers[0]?.assignmentType || null
-        };
-      }
-
-      return {
-        subjectName,
-        teachers: [],
-        teacherNames: [],
-        teacherName: null,
-        assignmentType: null
-      };
-    });
-
-    if (!mergedSubjects.length) {
-      return res.json({
-        subjects: [],
-        className: student.class || null,
-        section: student.section || null
-      });
-    }
-
-    res.json({
-      subjects: mergedSubjects,
-      classSubjects: classData?.subjects || [],
-      className: student.class || classData?.className || null,
-      section: student.section || classData?.section || null,
-      classId: student.classId || classData?._id || null
-    });
-  } catch (error) {
-    console.error('Error fetching student subjects:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-

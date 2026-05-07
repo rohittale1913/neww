@@ -40,13 +40,13 @@ const FeeManagement = () => {
     <DashboardLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-600 to-slate-900 bg-clip-text text-transparent"  >Fee Management</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-green-600 bg-clip-text text-transparent">Fee Management</h1>
           {/* <p className="text-slate-500 mt-2">Track and manage student fee payments</p> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg hover:shadow-xl border border-slate-100 hover:border-slate-300 transition p-6 flex items-center gap-4">
-            <div className="bg-gradient-to-br from-blue-100 to-indigo-100 text-2xl p-4 rounded-2xl text-blue-600 shadow-md">
+            <div className="bg-gradient-to-br from-blue-100 to-indigo-100 text-5xl p-4 rounded-2xl text-blue-600 shadow-md">
               <FiDollarSign />
             </div>
             <div>
@@ -56,7 +56,7 @@ const FeeManagement = () => {
           </div>
 
           <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg hover:shadow-xl border border-slate-100 hover:border-slate-300 transition p-6 flex items-center gap-4">
-            <div className="bg-gradient-to-br from-green-100 to-emerald-100 text-2xl p-4 rounded-2xl text-green-600 shadow-md">
+            <div className="bg-gradient-to-br from-green-100 to-emerald-100 text-5xl p-4 rounded-2xl text-green-600 shadow-md">
               <FiCheckCircle />
             </div>
             <div>
@@ -66,7 +66,7 @@ const FeeManagement = () => {
           </div>
 
           <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg hover:shadow-xl border border-slate-100 hover:border-slate-300 transition p-6 flex items-center gap-4">
-            <div className="bg-gradient-to-br from-orange-100 to-yellow-100 text-2xl p-4 rounded-2xl text-orange-600 shadow-md">
+            <div className="bg-gradient-to-br from-orange-100 to-yellow-100 text-5xl p-4 rounded-2xl text-orange-600 shadow-md">
               <FiClock />
             </div>
             <div>

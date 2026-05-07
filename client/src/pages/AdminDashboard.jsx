@@ -56,7 +56,7 @@ const AdminDashboard = () => {
       onClick={onClick}
       className={`bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg hover:shadow-2xl border border-slate-100 hover:border-slate-300 transition duration-300 p-6 flex items-center gap-4 transform hover:scale-105 hover:-translate-y-1 ${onClick ? 'cursor-pointer' : ''}`}
     >
-      <div className={`text-2xl p-4 rounded-2xl ${bgColor} shadow-md`}>
+      <div className={`text-5xl p-4 rounded-2xl ${bgColor} shadow-md`}>
         <Icon className={iconColor} />
       </div>
       <div className="flex flex-col">
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard 
             icon={FiCheckCircle} 
             label="Attendance Module" 

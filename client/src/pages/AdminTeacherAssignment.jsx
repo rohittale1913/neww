@@ -51,9 +51,14 @@ const AdminTeacherAssignment = () => {
         teacherAPI.getAll()
       ]);
 
-      setAssignments(assignmentsRes.data || []);
-      setClasses(classesRes.data || []);
-      setTeachers(teachersRes.data || []);
+      // Handle both array and object response structures
+      const assignmentsArray = Array.isArray(assignmentsRes) ? assignmentsRes : (assignmentsRes.data || []);
+      const classesArray = Array.isArray(classesRes) ? classesRes : (classesRes.data || []);
+      const teachersArray = Array.isArray(teachersRes) ? teachersRes : (teachersRes.data || []);
+
+      setAssignments(assignmentsArray);
+      setClasses(classesArray);
+      setTeachers(teachersArray);
       setError('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch data');
@@ -69,15 +74,8 @@ const AdminTeacherAssignment = () => {
     setTeacherConstraintWarning('');
     setSelectedTeacherSubjects([]);
     
-    // Fetch available teachers for this class
-    if (className && section) {
-      try {
-        const res = await classAssignmentAPI.getAvailableTeachers(className, section);
-        setAvailableTeachers(res.data || []);
-      } catch (err) {
-        console.error('Error fetching available teachers:', err);
-      }
-    }
+    // Show all teachers regardless of class/section
+    setAvailableTeachers(teachers);
   };
 
   const handleTeacherChange = (teacherId) => {
@@ -191,21 +189,13 @@ const AdminTeacherAssignment = () => {
       notes: assignment.notes || ''
     });
     
-    // Fetch available teachers for this class
-    try {
-      const res = await classAssignmentAPI.getAvailableTeachers(
-        assignment.className,
-        assignment.section
-      );
-      setAvailableTeachers(res.data || []);
-      
-      // Find the assigned teacher and set their subjects
-      const assignedTeacher = res.data.find(t => t._id === assignment.teacherId);
-      if (assignedTeacher && assignedTeacher.subjects) {
-        setSelectedTeacherSubjects(assignedTeacher.subjects);
-      }
-    } catch (err) {
-      console.error('Error fetching available teachers:', err);
+    // Show all teachers
+    setAvailableTeachers(teachers);
+    
+    // Find the assigned teacher and set their subjects
+    const assignedTeacher = teachers.find(t => t._id === assignment.teacherId);
+    if (assignedTeacher && assignedTeacher.subjects) {
+      setSelectedTeacherSubjects(assignedTeacher.subjects);
     }
     
     setShowModal(true);
@@ -262,6 +252,11 @@ const AdminTeacherAssignment = () => {
   // Get unique classes and sections for filter dropdowns
   const uniqueClasses = [...new Set(classes.map(c => c.className))].sort();
   const uniqueSections = [...new Set(classes.map(c => c.section))].sort();
+  
+  // Get sections filtered by selected class in form
+  const sectionsForSelectedClass = formData.className
+    ? [...new Set(classes.filter(c => c.className === formData.className).map(c => c.section))].sort()
+    : [...new Set(classes.map(c => c.section))].sort();
 
   return (
     <DashboardLayout>
@@ -470,10 +465,41 @@ const AdminTeacherAssignment = () => {
                   disabled={editingAssignment !== null}
                 >
                   <option value="">Select Section</option>
-                  {uniqueSections.map(sec => (
+                  {sectionsForSelectedClass.map(sec => (
                     <option key={sec} value={sec}>{sec}</option>
                   ))}
                 </select>
+              </div>
+            </div>
+
+            {/* Assignment Type */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                Assignment Type *
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 p-3 border-2 border-slate-300 rounded-lg cursor-pointer hover:border-blue-500">
+                  <input
+                    type="radio"
+                    value="class_teacher"
+                    checked={formData.assignmentType === 'class_teacher'}
+                    onChange={(e) => handleAssignmentTypeChange(e.target.value)}
+                    className="w-4 h-4"
+                  />
+                  <span className="font-semibold text-slate-900">Class Teacher</span>
+                  <span className="text-xs text-slate-500 ml-auto">(Primary class instructor)</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 border-2 border-slate-300 rounded-lg cursor-pointer hover:border-blue-500">
+                  <input
+                    type="radio"
+                    value="subject_teacher"
+                    checked={formData.assignmentType === 'subject_teacher'}
+                    onChange={(e) => handleAssignmentTypeChange(e.target.value)}
+                    className="w-4 h-4"
+                  />
+                  <span className="font-semibold text-slate-900">Subject Teacher</span>
+                  <span className="text-xs text-slate-500 ml-auto">(Teach specific subjects)</span>
+                </label>
               </div>
             </div>
 
@@ -539,37 +565,6 @@ const AdminTeacherAssignment = () => {
                 </div>
               )}
               <p className="text-xs text-slate-600 mt-1">Hold Ctrl/Cmd to select multiple subjects</p>
-            </div>
-
-            {/* Assignment Type */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-3">
-                Assignment Type *
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 p-3 border-2 border-slate-300 rounded-lg cursor-pointer hover:border-blue-500">
-                  <input
-                    type="radio"
-                    value="class_teacher"
-                    checked={formData.assignmentType === 'class_teacher'}
-                    onChange={(e) => handleAssignmentTypeChange(e.target.value)}
-                    className="w-4 h-4"
-                  />
-                  <span className="font-semibold text-slate-900">Class Teacher</span>
-                  <span className="text-xs text-slate-500 ml-auto">(Primary class instructor)</span>
-                </label>
-                <label className="flex items-center gap-3 p-3 border-2 border-slate-300 rounded-lg cursor-pointer hover:border-blue-500">
-                  <input
-                    type="radio"
-                    value="subject_teacher"
-                    checked={formData.assignmentType === 'subject_teacher'}
-                    onChange={(e) => handleAssignmentTypeChange(e.target.value)}
-                    className="w-4 h-4"
-                  />
-                  <span className="font-semibold text-slate-900">Subject Teacher</span>
-                  <span className="text-xs text-slate-500 ml-auto">(Teach specific subjects)</span>
-                </label>
-              </div>
             </div>
 
             {/* Notes */}

@@ -1,7 +1,6 @@
 import User from './models/User.js';
 import Student from './models/Student.js';
 import Teacher from './models/Teacher.js';
-import Class from './models/Class.js';
 import Accountant from './models/Accountant.js';
 import Librarian from './models/Librarian.js';
 import TransportManager from './models/TransportManager.js';
@@ -36,13 +35,6 @@ async function seedDatabase() {
       await Teacher.collection.drop();
     } catch (e) {
       console.log('Teacher collection already empty or dropped');
-    }
-    
-    try {
-      await Class.collection.deleteMany({});
-      await Class.collection.drop();
-    } catch (e) {
-      console.log('Class collection already empty or dropped');
     }
     
     try {
@@ -285,8 +277,6 @@ async function seedDatabase() {
     }
 
     // Create teacher profiles
-    // NOTE: The classes/sections arrays define which classes a teacher teaches
-    // classTeacherOf will be populated after classes are created
     const teacherProfiles = [
       {
         teacherId: `TCH001`,
@@ -296,12 +286,12 @@ async function seedDatabase() {
         phone: 8765432100,
         qualification: 'B.Sc, B.Ed',
         subjects: ['Mathematics', 'Physics'],
-        classes: ['9', '10'], // Teaches these classes
-        sections: ['A', 'B'], // In these sections
+        classes: ['10'],
+        sections: ['A', 'B'],
         experience: 8,
         employmentType: 'full-time',
         isClassTeacher: true,
-        classTeacherOf: '10-A' // Class teacher of 10-A and 9-B (see below)
+        classTeacherOf: '10'
       },
       {
         teacherId: `TCH002`,
@@ -311,12 +301,12 @@ async function seedDatabase() {
         phone: 8765432101,
         qualification: 'B.A, M.A, B.Ed',
         subjects: ['English', 'History'],
-        classes: ['9', '10'], // Teaches these classes
-        sections: ['A', 'B'], // In these sections
+        classes: ['9', '10'],
+        sections: ['A', 'B'],
         experience: 12,
         employmentType: 'full-time',
         isClassTeacher: true,
-        classTeacherOf: '10-B' // Class teacher of 10-B and 9-A (see below)
+        classTeacherOf: '9'
       },
       {
         teacherId: `TCH003`,
@@ -326,11 +316,11 @@ async function seedDatabase() {
         phone: 8765432102,
         qualification: 'B.Sc, B.Ed',
         subjects: ['Chemistry', 'Biology'],
-        classes: ['9', '10'], // Teaches these classes
-        sections: ['B'], // Only in section B
+        classes: ['9', '10'],
+        sections: ['B'],
         experience: 5,
         employmentType: 'full-time',
-        isClassTeacher: false, // Not assigned as class teacher
+        isClassTeacher: false,
         classTeacherOf: ''
       }
     ];
@@ -338,87 +328,6 @@ async function seedDatabase() {
     for (const profile of teacherProfiles) {
       await new Teacher(profile).save();
     }
-
-    // ==================== CLASSES ====================
-    console.log('Creating classes...');
-    
-    // Get teachers for class assignments
-    const teacherJohn = await Teacher.findOne({ teacherId: 'TCH001' });
-    const teacherSarah = await Teacher.findOne({ teacherId: 'TCH002' });
-    
-    // Get students for class assignments
-    const studentsClass10A = await Student.find({ class: '10', section: 'A' });
-    const studentsClass10B = await Student.find({ class: '10', section: 'B' });
-    const studentsClass9A = await Student.find({ class: '9', section: 'A' });
-    
-    const classesData = [
-      // Class 5
-      { className: '5', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '5-A', academicYear: '2024-2025' },
-      { className: '5', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '5-B', academicYear: '2024-2025' },
-      // Class 6
-      { className: '6', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '6-A', academicYear: '2024-2025' },
-      { className: '6', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '6-B', academicYear: '2024-2025' },
-      // Class 7
-      { className: '7', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '7-A', academicYear: '2024-2025' },
-      { className: '7', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '7-B', academicYear: '2024-2025' },
-      // Class 8
-      { className: '8', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '8-A', academicYear: '2024-2025' },
-      { className: '8', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '8-B', academicYear: '2024-2025' },
-      // Class 9
-      {
-        className: '9',
-        section: 'A',
-        classTeacher: null,
-        subjects: [],
-        students: studentsClass9A.map(s => s._id),
-        capacity: 45,
-        room: '9-A',
-        academicYear: '2024-2025'
-      },
-      {
-        className: '9',
-        section: 'B',
-        classTeacher: null,
-        subjects: [],
-        students: [],
-        capacity: 45,
-        room: '9-B',
-        academicYear: '2024-2025'
-      },
-      // Class 10
-      {
-        className: '10',
-        section: 'A',
-        classTeacher: teacherJohn?._id,
-        subjects: [],
-        students: studentsClass10A.map(s => s._id),
-        capacity: 45,
-        room: '10-A',
-        academicYear: '2024-2025'
-      },
-      {
-        className: '10',
-        section: 'B',
-        classTeacher: teacherSarah?._id,
-        subjects: [],
-        students: studentsClass10B.map(s => s._id),
-        capacity: 45,
-        room: '10-B',
-        academicYear: '2024-2025'
-      },
-      // Class 11
-      { className: '11', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '11-A', academicYear: '2024-2025' },
-      { className: '11', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '11-B', academicYear: '2024-2025' },
-      // Class 12
-      { className: '12', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '12-A', academicYear: '2024-2025' },
-      { className: '12', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '12-B', academicYear: '2024-2025' }
-    ];
-
-    for (const classData of classesData) {
-      await new Class(classData).save();
-    }
-
-    console.log('Classes created successfully');
 
     // ==================== STAFF ====================
     console.log('Creating staff members...');

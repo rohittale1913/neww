@@ -19,7 +19,11 @@ import FeeManagement from './pages/FeeManagement';
 import AdminExamsManagement from './pages/AdminExamsManagement';
 import AdminTeacherAssignment from './pages/AdminTeacherAssignment';
 import StudentDashboard from './pages/StudentDashboard';
+import StudentAssignments from './pages/StudentAssignments';
+import StudentAssignmentView from './pages/StudentAssignmentView';
 import TeacherDashboard from './pages/TeacherDashboard';
+import TeacherAssignmentCreate from './pages/TeacherAssignmentCreate';
+import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
 import AccountantDashboard from './pages/AccountantDashboard';
 import LibrarianDashboard from './pages/LibrarianDashboard';
 import TransportManagerDashboard from './pages/TransportManagerDashboard';
@@ -164,6 +168,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/teacher/assignments/create"
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <TeacherAssignmentCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/assignments/:assignmentId"
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <TeacherAssignmentDetail />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Student Routes */}
         <Route
@@ -171,6 +191,22 @@ function App() {
           element={
             <ProtectedRoute requiredRole="student">
               <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/assignments"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <StudentAssignments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/assignments/:assignmentId"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <StudentAssignmentView />
             </ProtectedRoute>
           }
         />

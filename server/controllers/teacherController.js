@@ -730,14 +730,18 @@ export const getAttendance = async (req, res) => {
 // Get my assignments (for teacher's classes)
 export const getMyAssignments = async (req, res) => {
   try {
+    const { filter } = req.query; // 'pending', 'graded', 'all'
+    
     const teacher = await Teacher.findOne({ userId: req.user.id }).lean();
     
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
 
-    const assignments = await Assignment.find({ class: { $in: teacher.classes } })
-      .populate('createdBy', 'name email')
+    // Get assignments created by this teacher
+    const assignments = await Assignment.find({ teacherId: teacher._id })
+      .populate('teacherId', 'name email')
+      .populate('subject', 'name code')
       .lean()
       .sort({ dueDate: -1 });
 
@@ -748,13 +752,31 @@ export const getMyAssignments = async (req, res) => {
       gradedCount: a.submissions?.filter(s => s.marksObtained !== undefined).length || 0,
       daysUntilDue: Math.ceil((new Date(a.dueDate) - new Date()) / (1000 * 60 * 60 * 24)),
       isOverdue: new Date(a.dueDate) < new Date(),
-      submissionStatus: a.submissions?.map(s => ({ studentId: s.studentId, status: s.marksObtained ? 'graded' : 'pending' })) || []
+      submissionStatus: a.submissions?.map(s => ({ 
+        studentId: s.studentId, 
+        studentName: s.studentName,
+        studentRollNumber: s.studentRollNumber,
+        submittedDate: s.submittedDate,
+        attachments: s.attachments,
+        marksObtained: s.marksObtained,
+        feedback: s.feedback,
+        isLate: s.isLate,
+        status: s.marksObtained !== undefined ? 'graded' : 'pending' 
+      })) || []
     }));
 
+    // Apply filter
+    let filtered = enrichedAssignments;
+    if (filter === 'pending') {
+      filtered = enrichedAssignments.filter(a => a.submissionCount > a.gradedCount);
+    } else if (filter === 'graded') {
+      filtered = enrichedAssignments.filter(a => a.gradedCount > 0);
+    }
+
     res.json({
-      assignments: enrichedAssignments,
-      totalAssignments: enrichedAssignments.length,
-      pendingGrading: enrichedAssignments.reduce((acc, a) => acc + (a.submissionCount - a.gradedCount), 0)
+      assignments: filtered,
+      totalAssignments: filtered.length,
+      pendingGrading: filtered.reduce((acc, a) => acc + (a.submissionCount - a.gradedCount), 0)
     });
   } catch (error) {
     console.error('Error fetching assignments:', error);
@@ -786,7 +808,13 @@ export const getAssignmentDetail = async (req, res) => {
 // Grade assignment
 export const gradeAssignment = async (req, res) => {
   try {
-    const { assignmentId, studentId, marksObtained, feedback } = req.body;
+    console.log('=== GRADE REQUEST RECEIVED ===');
+    console.log('params:', req.params);
+    console.log('body:', req.body);
+    console.log('user:', req.user ? { id: req.user.id, role: req.user.role } : null);
+
+    const assignmentId = req.params.assignmentId;
+    const { studentId, marksObtained, feedback } = req.body;
 
     if (!assignmentId || !studentId || marksObtained === undefined) {
       return res.status(400).json({ message: 'assignmentId, studentId, and marksObtained are required' });
