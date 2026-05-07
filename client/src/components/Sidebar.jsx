@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiHome, FiUsers, FiBook, FiBarChart2, FiDollarSign, FiCalendar, FiFileText, FiTruck, FiClipboard, FiAward } from 'react-icons/fi';
+import { FiHome, FiUsers, FiBook, FiBarChart2, FiDollarSign, FiCalendar, FiFileText, FiTruck, FiClipboard, FiAward, FiClock } from 'react-icons/fi';
 import useAuthStore from '../store/authStore';
 
 const Sidebar = ({ isOpen }) => {
@@ -13,27 +13,29 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FiUsers />, label: 'View Teachers', path: '/admin/teachers-view' },
     { icon: <FiUsers />, label: 'View Staff', path: '/admin/staff-view' },
     { icon: <FiBook />, label: 'Class Assignments', path: '/admin/class-assignments' },
+    { icon: <FiClock />, label: 'Timetables', path: '/admin/timetables' },
+    { icon: <FiClock />, label: 'Generate Daily Timetable', path: '/admin/daily-timetables' },
     { icon: <FiCalendar />, label: 'Attendance', path: '/admin/attendance' },
     { icon: <FiDollarSign />, label: 'Fees', path: '/admin/fees' },
     { icon: <FiBarChart2 />, label: 'Exams', path: '/admin/exams' }
   ];
 
   const teacherMenuItems = [
-    { icon: <FiClipboard />, label: 'Overview', path: '/teacher?tab=overview' },
-    { icon: <FiBook />, label: 'My Classes', path: '/teacher?tab=classes' },
-    { icon: <FiCalendar />, label: 'Attendance', path: '/teacher?tab=attendance' },
-    { icon: <FiFileText />, label: 'Assignments', path: '/teacher?tab=assignments' },
-    { icon: <FiBarChart2 />, label: 'Exams', path: '/teacher?tab=exams' }
+    { icon: <FiHome />, label: 'Dashboard', path: '/teacher' },
+    { icon: <FiBook />, label: 'My Assignments', path: '/teacher/assignments' },
+    { icon: <FiClock />, label: 'My Timetable', path: '/teacher/timetable' },
+    { icon: <FiDollarSign />, label: 'Salary & Fees', path: '/teacher/fees' }
   ];
 
   const studentMenuItems = [
     { icon: <FiClipboard />, label: 'Overview', path: '/student?tab=overview' },
     { icon: <FiBook />, label: 'My Subjects', path: '/student?tab=subjects' },
+    { icon: <FiClock />, label: 'My Timetable', path: '/student/timetable' },
     { icon: <FiCalendar />, label: 'Attendance', path: '/student?tab=attendance' },
     { icon: <FiFileText />, label: 'Assignments', path: '/student?tab=assignments' },
     { icon: <FiBarChart2 />, label: 'Exams', path: '/student?tab=exams' },
     { icon: <FiAward />, label: 'Results', path: '/student?tab=results' },
-    { icon: <FiDollarSign />, label: 'Fees', path: '/student?tab=fees' }
+    { icon: <FiDollarSign />, label: 'My Fees', path: '/student/fees' }
   ];
 
   const parentMenuItems = [
@@ -47,7 +49,8 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FiHome />, label: 'Dashboard', path: '/accountant' },
     { icon: <FiDollarSign />, label: 'Fee Collection', path: '/accountant/fees' },
     { icon: <FiFileText />, label: 'Reports', path: '/accountant/reports' },
-    { icon: <FiBarChart2 />, label: 'Analytics', path: '/accountant/analytics' }
+    { icon: <FiBarChart2 />, label: 'Analytics', path: '/accountant/analytics' },
+    { icon: <FiDollarSign />, label: 'My Salary', path: '/staff/fees' }
   ];
 
   const librarianMenuItems = [

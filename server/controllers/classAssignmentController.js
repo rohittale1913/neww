@@ -7,8 +7,20 @@ import Student from '../models/Student.js';
 // Assign teacher to class with specific subjects
 export const assignTeacherToClass = async (req, res) => {
   try {
-    const { className, section, teacherId, subjects, assignmentType, notes } = req.body;
+    let { className, section, teacherId, subjects, assignmentType, notes } = req.body;
     const adminId = req.user.id;
+    const userRole = req.user.role;
+
+    // If teacher is assigning to themselves, get their teacher ID automatically
+    if (userRole === 'teacher' && !teacherId) {
+      const currentTeacher = await Teacher.findOne({ userId: req.user.id });
+      if (!currentTeacher) {
+        return res.status(404).json({ 
+          message: 'Teacher profile not found for current user' 
+        });
+      }
+      teacherId = currentTeacher._id;
+    }
 
     // Validate required fields
     if (!className || !section || !teacherId || !subjects || !assignmentType) {
@@ -22,6 +34,15 @@ export const assignTeacherToClass = async (req, res) => {
       return res.status(400).json({ 
         message: 'assignmentType must be either "class_teacher" or "subject_teacher"' 
       });
+    }
+
+    // Authorization check: Non-admin teachers can only assign to themselves
+    if (userRole !== 'admin') {
+      if (teacherId.toString() !== (await Teacher.findOne({ userId: req.user.id }))?._id?.toString()) {
+        return res.status(403).json({ 
+          message: 'Teachers can only create assignments for themselves' 
+        });
+      }
     }
 
     // Check if teacher exists

@@ -14,15 +14,17 @@ import { roleMiddleware } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-// All routes require authentication and admin role
-router.use(authMiddleware, roleMiddleware('admin'));
+// Public routes (authenticated but not admin-only)
+// Teachers need access to view classes and create assignments
+router.get('/all', authMiddleware, getAllAssignments);
+router.get('/classes-sections', authMiddleware, getAllClassesAndSections);
+router.get('/class-students', authMiddleware, getClassStudents);
+// Teachers can assign themselves to classes
+router.post('/assign', authMiddleware, assignTeacherToClass);
 
-// Assignment management routes
-router.post('/assign', assignTeacherToClass);
-router.get('/all', getAllAssignments);
+// Admin-only routes
+router.use(authMiddleware, roleMiddleware('admin'));
 router.get('/available-teachers', getAvailableTeachersForClass);
-router.get('/classes-sections', getAllClassesAndSections);
-router.get('/class-students', getClassStudents);
 router.get('/:assignmentId', getAssignmentWithConnections);
 router.put('/:assignmentId', updateAssignment);
 router.delete('/:assignmentId', deleteAssignment);
