@@ -16,6 +16,8 @@ import TeacherUsersView from './pages/TeacherUsersView';
 import StaffUsersView from './pages/StaffUsersView';
 import AdminAttendanceManagement from './pages/AdminAttendanceManagement';
 import FeeManagement from './pages/FeeManagement';
+import AccountantFeeManagement from './pages/AccountantFeeManagement';
+import AccountantManageFees from './pages/AccountantManageFees';
 import AdminExamsManagement from './pages/AdminExamsManagement';
 import AdminTeacherAssignment from './pages/AdminTeacherAssignment';
 import StudentDashboard from './pages/StudentDashboard';
@@ -217,6 +219,22 @@ function App() {
           element={
             <ProtectedRoute requiredRole="accountant">
               <AccountantDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accountant/fees"
+          element={
+            <ProtectedRoute requiredRole="accountant">
+              <AccountantFeeManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accountant/manage-fees"
+          element={
+            <ProtectedRoute requiredRole="accountant">
+              <AccountantManageFees />
             </ProtectedRoute>
           }
         />

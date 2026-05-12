@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { studentAPI } from '../services/api';
+import { studentAPI, feeAPI } from '../services/api';
 import { FiCreditCard, FiCheckCircle, FiAlertCircle, FiClock } from 'react-icons/fi';
+import Modal from './Modal';
 
 const StudentFees = () => {
   const [fees, setFees] = useState([]);
@@ -8,6 +9,15 @@ const StudentFees = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedFee, setSelectedFee] = useState(null);
+  const [paymentData, setPaymentData] = useState({
+    amountPaid: '',
+    paymentMethod: 'online',
+    transactionId: '',
+    remarks: ''
+  });
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     fetchFees();
@@ -26,6 +36,52 @@ const StudentFees = () => {
       setError(err.response?.data?.message || 'Failed to load fees');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaymentClick = (fee) => {
+    setSelectedFee(fee);
+    setPaymentData({
+      amountPaid: fee.dueAmount?.toString() || '',
+      paymentMethod: 'online',
+      transactionId: `TXN-${Date.now()}`,
+      remarks: ''
+    });
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedFee || !paymentData.amountPaid) {
+      alert('Please enter payment amount');
+      return;
+    }
+
+    const amount = parseFloat(paymentData.amountPaid);
+    if (amount <= 0 || amount > selectedFee.dueAmount) {
+      alert(`Payment amount must be between 0 and ${selectedFee.dueAmount}`);
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      
+      await feeAPI.recordPayment({
+        feeId: selectedFee._id,
+        amountPaid: amount,
+        paymentMethod: paymentData.paymentMethod,
+        transactionId: paymentData.transactionId,
+        remarks: paymentData.remarks
+      });
+
+      alert('Payment recorded successfully!');
+      setShowPaymentModal(false);
+      fetchFees();
+    } catch (error) {
+      alert('Failed to record payment: ' + error.message);
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -55,6 +111,9 @@ const StudentFees = () => {
       uniform: 'Uniform Fee',
       activities: 'Activities Fee',
       exam: 'Exam Fee',
+      library: 'Library Fee',
+      sports: 'Sports Fee',
+      registration: 'Registration Fee',
       other: 'Other'
     };
     return types[feeType] || feeType;
@@ -162,40 +221,46 @@ const StudentFees = () => {
               <thead className="border-b border-slate-200 bg-slate-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-bold text-slate-700">Fee Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700">Academic Year</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-slate-700">Amount</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-slate-700">Total Amount</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-slate-700">Paid Amount</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-slate-700">Due Amount</th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-slate-700">Due Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700">Paid Date</th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-slate-700">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700">Payment Method</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-700">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {fees.map((fee, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                  <tr key={fee._id || idx} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-slate-900">
                       {getFeeTypeLabel(fee.feeType)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {fee.academicYear || 'N/A'}
-                    </td>
                     <td className="px-6 py-4 text-sm text-right font-semibold text-slate-900">
-                      ₹{fee.amount?.toLocaleString('en-IN') || 0}
+                      ₹{fee.totalAmount?.toLocaleString('en-IN') || 0}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right font-semibold text-green-600">
+                      ₹{fee.paidAmount?.toLocaleString('en-IN') || 0}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right font-semibold text-orange-600">
+                      ₹{fee.dueAmount?.toLocaleString('en-IN') || 0}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">
                       {fee.dueDate ? new Date(fee.dueDate).toLocaleDateString('en-IN') : '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {fee.paidDate ? new Date(fee.paidDate).toLocaleDateString('en-IN') : '-'}
-                    </td>
                     <td className="px-6 py-4">
                       {getStatusBadge(fee.status)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {fee.paymentMethod ? (
-                        <span className="capitalize">{fee.paymentMethod}</span>
-                      ) : (
-                        '-'
+                    <td className="px-6 py-4">
+                      {fee.status !== 'paid' && (
+                        <button
+                          onClick={() => handlePaymentClick(fee)}
+                          className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
+                        >
+                          Pay
+                        </button>
+                      )}
+                      {fee.status === 'paid' && (
+                        <span className="text-green-600 font-semibold text-xs">✓ Paid</span>
                       )}
                     </td>
                   </tr>
@@ -213,16 +278,126 @@ const StudentFees = () => {
           <p className="text-sm text-slate-700 mb-4">
             You have an outstanding fee amount of <span className="font-bold text-red-600">₹{summary.dueAmount?.toLocaleString('en-IN') || 0}</span>
           </p>
-          <div className="flex gap-3">
-            <button className="px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition-colors">
-              Pay Now
-            </button>
-            <button className="px-4 py-2 border border-amber-300 text-amber-700 font-medium rounded-lg hover:bg-amber-100 transition-colors">
-              View Details
-            </button>
-          </div>
+          <p className="text-xs text-slate-600 mb-4">Please click the "Pay" button in the table to make a payment.</p>
         </div>
       )}
+
+      {/* Payment Modal */}
+      <Modal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        title="Record Payment"
+      >
+        {selectedFee && (
+          <form onSubmit={handlePaymentSubmit} className="space-y-4">
+            {/* Fee Summary */}
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <p className="text-sm font-semibold text-slate-700 mb-3">Fee: {getFeeTypeLabel(selectedFee.feeType)}</p>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-slate-600 uppercase">Total</p>
+                  <p className="text-lg font-bold text-slate-900">₹{selectedFee.totalAmount?.toLocaleString('en-IN') || 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-600 uppercase">Paid</p>
+                  <p className="text-lg font-bold text-green-600">₹{selectedFee.paidAmount?.toLocaleString('en-IN') || 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-600 uppercase">Due</p>
+                  <p className="text-lg font-bold text-red-600">₹{selectedFee.dueAmount?.toLocaleString('en-IN') || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Amount */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Payment Amount *
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-slate-600 font-semibold">₹</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={selectedFee.dueAmount}
+                  value={paymentData.amountPaid}
+                  onChange={(e) => setPaymentData({ ...paymentData, amountPaid: e.target.value })}
+                  className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg"
+                  placeholder="Enter amount"
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Max: ₹{selectedFee.dueAmount?.toLocaleString('en-IN') || 0}
+              </p>
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Payment Method *
+              </label>
+              <select
+                value={paymentData.paymentMethod}
+                onChange={(e) => setPaymentData({ ...paymentData, paymentMethod: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              >
+                <option value="online">Online Transfer</option>
+                <option value="card">Credit/Debit Card</option>
+                <option value="cash">Cash</option>
+                <option value="check">Check</option>
+              </select>
+            </div>
+
+            {/* Transaction ID */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Transaction ID
+              </label>
+              <input
+                type="text"
+                value={paymentData.transactionId}
+                onChange={(e) => setPaymentData({ ...paymentData, transactionId: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                placeholder="Optional: Reference number"
+              />
+            </div>
+
+            {/* Remarks */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Remarks
+              </label>
+              <textarea
+                value={paymentData.remarks}
+                onChange={(e) => setPaymentData({ ...paymentData, remarks: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                placeholder="Optional: Any additional notes"
+                rows="2"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={processing}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {processing ? 'Processing...' : 'Submit Payment'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(false)}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 };

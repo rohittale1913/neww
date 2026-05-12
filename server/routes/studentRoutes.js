@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllStudents, getStudentById, createStudent, updateStudent, deleteStudent, getStudentByUserId, getStudentProfileWithClassTeacher, getMySubjects, getMyAttendance, getMyAssignments, getMyAssignmentDetail, submitMyAssignment, getMyExams, getMyResults, getMyFees } from '../controllers/studentController.js';
+import { getAllStudents, getStudentsByClass, getStudentById, createStudent, updateStudent, deleteStudent, getStudentByUserId, getStudentProfileWithClassTeacher, getMySubjects, getMyAttendance, getMyAssignments, getMyAssignmentDetail, submitMyAssignment, getMyExams, getMyResults, getMyFees } from '../controllers/studentController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { roleMiddleware } from '../middleware/roleMiddleware.js';
 
@@ -17,6 +17,9 @@ router.post('/my-assignments/:assignmentId/submit', authMiddleware, submitMyAssi
 router.get('/my-exams', authMiddleware, getMyExams);
 router.get('/my-results', authMiddleware, getMyResults);
 router.get('/my-fees', authMiddleware, getMyFees);
+
+// Get students by class (for admin/accountant - for fee creation form)
+router.get('/class/:classId', authMiddleware, roleMiddleware('admin', 'accountant'), getStudentsByClass);
 
 // Standard CRUD endpoints
 router.get('/', authMiddleware, getAllStudents);

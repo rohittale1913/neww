@@ -81,6 +81,7 @@ export const studentAPI = {
   getCurrentProfile: () => api.get('/students/profile/current'),
   getProfileWithTeacher: (userId) => api.get(`/students/profile/with-teacher/${userId}`),
   getProfileWithTeacherCurrent: () => api.get('/students/profile/with-teacher'),
+  getByClass: (classId) => api.get(`/students/class/${classId}`),
   create: (data) => api.post('/students', data),
   update: (id, data) => api.put(`/students/${id}`, data),
   delete: (id) => api.delete(`/students/${id}`),
@@ -183,12 +184,22 @@ export const attendanceAPI = {
 
 // Fee APIs
 export const feeAPI = {
-  getAll: () => api.get('/fees'),
-  getByStudent: (studentId) => api.get(`/fees/student/${studentId}`),
-  getPending: () => api.get('/fees/pending'),
+  getAll: (params) => api.get('/fees', { params }),
+  getByStudent: (studentId, params) => api.get(`/fees/student/${studentId}`, { params }),
+  getSummary: (studentId, params) => api.get(`/fees/summary/${studentId}`, { params }),
+  getPending: (params) => api.get('/fees/pending', { params }),
+  getPaymentHistory: (feeId) => api.get(`/fees/payment-history/${feeId}`),
   add: (data) => api.post('/fees', data),
-  pay: (data) => api.post('/fees/pay', data),
-  getStatistics: () => api.get('/fees/statistics')
+  update: (feeId, data) => api.put(`/fees/${feeId}`, data),
+  bulkAdd: (data) => api.post('/fees/bulk', data),
+  recordPayment: (data) => api.post('/fees/pay', data),
+  getStatistics: (params) => api.get('/fees/statistics', { params }),
+  
+  // Template APIs
+  getTemplates: (params) => api.get('/fees/templates/list', { params }),
+  createTemplate: (data) => api.post('/fees/templates', data),
+  updateTemplate: (templateId, data) => api.put(`/fees/templates/${templateId}`, data),
+  deleteTemplate: (templateId) => api.delete(`/fees/templates/${templateId}`)
 };
 
 // Exam APIs

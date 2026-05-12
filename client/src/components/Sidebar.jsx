@@ -44,9 +44,8 @@ const Sidebar = ({ isOpen }) => {
 
   const accountantMenuItems = [
     { icon: <FiHome />, label: 'Dashboard', path: '/accountant' },
-    { icon: <FiDollarSign />, label: 'Fee Collection', path: '/accountant/fees' },
-    { icon: <FiFileText />, label: 'Reports', path: '/accountant/reports' },
-    { icon: <FiBarChart2 />, label: 'Analytics', path: '/accountant/analytics' }
+    { icon: <FiDollarSign />, label: 'Create Fees', path: '/accountant/fees' },
+    { icon: <FiUsers />, label: 'Manage Fees', path: '/accountant/manage-fees' }
   ];
 
   const librarianMenuItems = [

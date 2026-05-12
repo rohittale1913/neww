@@ -529,9 +529,9 @@ export const getMyFees = async (req, res) => {
       .lean()
       .sort({ dueDate: -1 });
 
-    const totalAmount = fees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
-    const paidAmount = fees.filter((fee) => fee.status === 'paid').reduce((sum, fee) => sum + (fee.amount || 0), 0);
-    const dueAmount = totalAmount - paidAmount;
+    const totalAmount = fees.reduce((sum, fee) => sum + (fee.totalAmount || 0), 0);
+    const paidAmount = fees.reduce((sum, fee) => sum + (fee.paidAmount || 0), 0);
+    const dueAmount = fees.reduce((sum, fee) => sum + (fee.dueAmount || 0), 0);
 
     res.json({
       fees,
@@ -558,6 +558,33 @@ export const getAllStudents = async (req, res) => {
   } catch (error) {
     console.error('Error fetching students:', error);
     res.status(500).json({ message: 'Failed to fetch students', error: error.message });
+  }
+};
+
+// Get students by Class ID
+export const getStudentsByClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    if (!classId) {
+      return res.status(400).json({ 
+        message: 'classId is required' 
+      });
+    }
+
+    // Find students in the specified class
+    const students = await Student.find({
+      class: classId,
+      isActive: true
+    })
+      .select('_id studentId name section email parentContact')
+      .sort({ name: 1 })
+      .lean();
+
+    res.json(students);
+  } catch (error) {
+    console.error('Error fetching students by class:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -789,6 +816,7 @@ export const deleteStudent = async (req, res) => {
 
 export default { 
   getAllStudents, 
+  getStudentsByClass,
   getStudentById, 
   createStudent, 
   updateStudent, 

@@ -14,8 +14,8 @@ import { roleMiddleware } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 
-// All routes require authentication and admin role
-router.use(authMiddleware, roleMiddleware('admin'));
+// All routes require authentication and (admin or accountant)
+router.use(authMiddleware, roleMiddleware('admin', 'accountant'));
 
 // Assignment management routes
 router.post('/assign', assignTeacherToClass);
