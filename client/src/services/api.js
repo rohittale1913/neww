@@ -149,37 +149,12 @@ export const attendanceAPI = {
 
 // Fee APIs
 export const feeAPI = {
-  // Fee Management
-  getAll: (params) => api.get('/fees', { params }),
-  getMyFees: (params) => api.get('/fees/my-fees', { params }),
-  getEntityFees: (entityType, entityId, params) => api.get(`/fees/entity/${entityType}/${entityId}`, { params }),
-  getById: (id) => api.get(`/fees/${id}`),
-  
-  // Create and Update
-  create: (data) => api.post('/fees', data),
-  bulkCreateFromStructure: (data) => api.post('/fees/bulk/from-structure', data),
-  update: (id, data) => api.put(`/fees/${id}`, data),
-  
-  // Payment and Status
-  recordPayment: (id, data) => api.post(`/fees/${id}/pay`, data),
-  waiveFee: (id, data) => api.post(`/fees/${id}/waive`, data),
-  
-  // Delete
-  delete: (id) => api.delete(`/fees/${id}`),
-  
-  // Status Queries
-  getPending: (params) => api.get('/fees/pending', { params }),
-  getOverdue: (params) => api.get('/fees/overdue', { params }),
-  
-  // Statistics
-  getStatistics: (params) => api.get('/fees/statistics/all', { params }),
-  getEntityStatistics: (entityType, entityId, params) => api.get(`/fees/statistics/${entityType}/${entityId}`, { params }),
-  
-  // Fee Structures
-  getStructures: (params) => api.get('/fees/structure/all', { params }),
-  createStructure: (data) => api.post('/fees/structure', data),
-  updateStructure: (id, data) => api.put(`/fees/structure/${id}`, data),
-  deleteStructure: (id) => api.delete(`/fees/structure/${id}`)
+  getAll: () => api.get('/fees'),
+  getByStudent: (studentId) => api.get(`/fees/student/${studentId}`),
+  getPending: () => api.get('/fees/pending'),
+  add: (data) => api.post('/fees', data),
+  pay: (data) => api.post('/fees/pay', data),
+  getStatistics: () => api.get('/fees/statistics')
 };
 
 // Exam APIs
@@ -245,7 +220,6 @@ export const classAPI = {
 
 // Class Assignment APIs (for assigning teachers to classes with subjects)
 export const classAssignmentAPI = {
-  assign: (data) => api.post('/class-assignments/assign', data),
   assignTeacher: (data) => api.post('/class-assignments/assign', data),
   getAll: (filters = {}) => api.get('/class-assignments/all', { params: filters }),
   getById: (assignmentId) => api.get(`/class-assignments/${assignmentId}`),
@@ -258,49 +232,6 @@ export const classAssignmentAPI = {
   getClassStudents: (className, section) => api.get('/class-assignments/class-students', {
     params: { className, section }
   })
-};
-
-// Timetable APIs
-export const timetableAPI = {
-  // Get timetables
-  getAll: (params) => api.get('/timetables', { params }),
-  getClassTimetable: (classId, params) => api.get(`/timetables/class/${classId}`, { params }),
-  getStudentTimetable: (params) => api.get('/timetables/my-schedule', { params }),
-  getTeacherTimetable: (params) => api.get('/timetables/teacher/schedule', { params }),
-  
-  // Create, Update, Delete
-  create: (data) => api.post('/timetables', data),
-  update: (id, data) => api.put(`/timetables/${id}`, data),
-  delete: (id) => api.delete(`/timetables/${id}`),
-  
-  // Bulk operations
-  bulkCreate: (data) => api.post('/timetables/bulk/create', data)
-};
-
-// Daily Timetable APIs (Advanced with generation and downloads)
-export const dailyTimetableAPI = {
-  // Get timetables
-  getAll: (params) => api.get('/daily-timetables', { params }),
-  getClassTimetable: (classId, params) => api.get(`/daily-timetables/class/${classId}`, { params }),
-  getStudentTimetable: (params) => api.get('/daily-timetables/my-schedule', { params }),
-  getTeacherTimetable: (params) => api.get('/daily-timetables/teacher/schedule', { params }),
-  
-  // Generation and validation
-  checkPrerequisites: (data) => api.post('/daily-timetables/check-prerequisites', data),
-  generateTimetable: (data) => api.post('/daily-timetables/generate', data),
-  validateTimetable: (data) => api.post('/daily-timetables/validate', data),
-  
-  // Download
-  downloadTimetable: (classId, format, params) => 
-    api.get(`/daily-timetables/download/${classId}/${format}`, { 
-      params,
-      responseType: 'blob'
-    }),
-  
-  // Create, Update, Delete
-  create: (data) => api.post('/daily-timetables', data),
-  update: (id, data) => api.put(`/daily-timetables/${id}`, data),
-  delete: (id) => api.delete(`/daily-timetables/${id}`)
 };
 
 export default api;

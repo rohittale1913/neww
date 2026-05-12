@@ -16,15 +16,6 @@ import TeacherUsersView from './pages/TeacherUsersView';
 import StaffUsersView from './pages/StaffUsersView';
 import AdminAttendanceManagement from './pages/AdminAttendanceManagement';
 import FeeManagement from './pages/FeeManagement';
-import StudentFees from './pages/StudentFees';
-import TeacherFees from './pages/TeacherFees';
-import StaffFees from './pages/StaffFees';
-import StudentTimetable from './pages/StudentTimetable';
-import TeacherTimetable from './pages/TeacherTimetable';
-import TeacherMyAssignments from './pages/TeacherMyAssignments';
-import AdminTimetableManagement from './pages/AdminTimetableManagement';
-import TeacherSubjectAssignment from './pages/TeacherSubjectAssignment';
-import DailyTimetableGenerator from './pages/DailyTimetableGenerator';
 import AdminExamsManagement from './pages/AdminExamsManagement';
 import AdminTeacherAssignment from './pages/AdminTeacherAssignment';
 import StudentDashboard from './pages/StudentDashboard';
@@ -163,30 +154,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin/timetables"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <AdminTimetableManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/teacher-subject-assignment"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <TeacherSubjectAssignment />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/daily-timetables"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <DailyTimetableGenerator />
-            </ProtectedRoute>
-          }
-        />
 
         {/* Teacher Routes */}
         <Route
@@ -197,30 +164,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/teacher/fees"
-          element={
-            <ProtectedRoute requiredRole="teacher">
-              <TeacherFees />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/timetable"
-          element={
-            <ProtectedRoute requiredRole="teacher">
-              <TeacherTimetable />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/assignments"
-          element={
-            <ProtectedRoute requiredRole="teacher">
-              <TeacherMyAssignments />
-            </ProtectedRoute>
-          }
-        />
 
         {/* Student Routes */}
         <Route
@@ -228,22 +171,6 @@ function App() {
           element={
             <ProtectedRoute requiredRole="student">
               <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/fees"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <StudentFees />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/timetable"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <StudentTimetable />
             </ProtectedRoute>
           }
         />
@@ -284,16 +211,6 @@ function App() {
           element={
             <ProtectedRoute requiredRole="parent">
               <ParentDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Staff Fees Route (for accountants, librarians, transport managers) */}
-        <Route
-          path="/staff/fees"
-          element={
-            <ProtectedRoute>
-              <StaffFees />
             </ProtectedRoute>
           }
         />

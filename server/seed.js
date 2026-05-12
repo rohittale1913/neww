@@ -2,7 +2,6 @@ import User from './models/User.js';
 import Student from './models/Student.js';
 import Teacher from './models/Teacher.js';
 import Class from './models/Class.js';
-import Subject from './models/Subject.js';
 import Accountant from './models/Accountant.js';
 import Librarian from './models/Librarian.js';
 import TransportManager from './models/TransportManager.js';
@@ -44,13 +43,6 @@ async function seedDatabase() {
       await Class.collection.drop();
     } catch (e) {
       console.log('Class collection already empty or dropped');
-    }
-
-    try {
-      await Subject.collection.deleteMany({});
-      await Subject.collection.drop();
-    } catch (e) {
-      console.log('Subject collection already empty or dropped');
     }
     
     try {
@@ -347,31 +339,6 @@ async function seedDatabase() {
       await new Teacher(profile).save();
     }
 
-    // ==================== SUBJECTS ====================
-    console.log('Creating subjects...');
-    
-    const subjectsData = [
-      { name: 'Mathematics', code: 'MATH', description: 'Mathematics', classes: ['9', '10', '11', '12'] },
-      { name: 'Physics', code: 'PHY', description: 'Physics', classes: ['9', '10', '11', '12'] },
-      { name: 'Chemistry', code: 'CHM', description: 'Chemistry', classes: ['9', '10', '11', '12'] },
-      { name: 'Biology', code: 'BIO', description: 'Biology', classes: ['9', '10', '11', '12'] },
-      { name: 'English', code: 'ENG', description: 'English', classes: ['5', '6', '7', '8', '9', '10', '11', '12'] },
-      { name: 'Hindi', code: 'HND', description: 'Hindi', classes: ['5', '6', '7', '8', '9', '10', '11', '12'] },
-      { name: 'Social Studies', code: 'SS', description: 'Social Studies', classes: ['5', '6', '7', '8', '9', '10'] },
-      { name: 'History', code: 'HIST', description: 'History', classes: ['9', '10', '11', '12'] },
-      { name: 'Geography', code: 'GEO', description: 'Geography', classes: ['9', '10', '11', '12'] },
-      { name: 'Computer Science', code: 'CS', description: 'Computer Science', classes: ['9', '10', '11', '12'] },
-      { name: 'Physical Education', code: 'PE', description: 'Physical Education', classes: ['5', '6', '7', '8', '9', '10', '11', '12'] },
-      { name: 'Art', code: 'ART', description: 'Art', classes: ['5', '6', '7', '8'] }
-    ];
-
-    const createdSubjects = [];
-    for (const subject of subjectsData) {
-      const newSubject = await new Subject(subject).save();
-      createdSubjects.push(newSubject);
-    }
-    console.log(`Created ${createdSubjects.length} subjects`);
-
     // ==================== CLASSES ====================
     console.log('Creating classes...');
     
@@ -384,36 +351,25 @@ async function seedDatabase() {
     const studentsClass10B = await Student.find({ class: '10', section: 'B' });
     const studentsClass9A = await Student.find({ class: '9', section: 'A' });
     
-    // Helper function to get subject IDs
-    const getSubjectIds = (names) => {
-      return names.map(name => {
-        const subject = createdSubjects.find(s => s.name === name);
-        return subject?._id;
-      }).filter(Boolean);
-    };
-
-    const classSubjects9_10 = getSubjectIds(['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Social Studies', 'Computer Science', 'History']);
-    const classSubjects5_8 = getSubjectIds(['English', 'Hindi', 'Social Studies', 'Mathematics', 'Physical Education', 'Art']);
-    
     const classesData = [
       // Class 5
-      { className: '5', section: 'A', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '5-A', academicYear: '2024-2025' },
-      { className: '5', section: 'B', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '5-B', academicYear: '2024-2025' },
+      { className: '5', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '5-A', academicYear: '2024-2025' },
+      { className: '5', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '5-B', academicYear: '2024-2025' },
       // Class 6
-      { className: '6', section: 'A', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '6-A', academicYear: '2024-2025' },
-      { className: '6', section: 'B', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '6-B', academicYear: '2024-2025' },
+      { className: '6', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '6-A', academicYear: '2024-2025' },
+      { className: '6', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '6-B', academicYear: '2024-2025' },
       // Class 7
-      { className: '7', section: 'A', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '7-A', academicYear: '2024-2025' },
-      { className: '7', section: 'B', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '7-B', academicYear: '2024-2025' },
+      { className: '7', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '7-A', academicYear: '2024-2025' },
+      { className: '7', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '7-B', academicYear: '2024-2025' },
       // Class 8
-      { className: '8', section: 'A', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '8-A', academicYear: '2024-2025' },
-      { className: '8', section: 'B', classTeacher: null, subjects: classSubjects5_8, students: [], capacity: 45, room: '8-B', academicYear: '2024-2025' },
+      { className: '8', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '8-A', academicYear: '2024-2025' },
+      { className: '8', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '8-B', academicYear: '2024-2025' },
       // Class 9
       {
         className: '9',
         section: 'A',
         classTeacher: null,
-        subjects: classSubjects9_10,
+        subjects: [],
         students: studentsClass9A.map(s => s._id),
         capacity: 45,
         room: '9-A',
@@ -423,7 +379,7 @@ async function seedDatabase() {
         className: '9',
         section: 'B',
         classTeacher: null,
-        subjects: classSubjects9_10,
+        subjects: [],
         students: [],
         capacity: 45,
         room: '9-B',
@@ -434,7 +390,7 @@ async function seedDatabase() {
         className: '10',
         section: 'A',
         classTeacher: teacherJohn?._id,
-        subjects: classSubjects9_10,
+        subjects: [],
         students: studentsClass10A.map(s => s._id),
         capacity: 45,
         room: '10-A',
@@ -444,18 +400,18 @@ async function seedDatabase() {
         className: '10',
         section: 'B',
         classTeacher: teacherSarah?._id,
-        subjects: classSubjects9_10,
+        subjects: [],
         students: studentsClass10B.map(s => s._id),
         capacity: 45,
         room: '10-B',
         academicYear: '2024-2025'
       },
       // Class 11
-      { className: '11', section: 'A', classTeacher: null, subjects: classSubjects9_10, students: [], capacity: 45, room: '11-A', academicYear: '2024-2025' },
-      { className: '11', section: 'B', classTeacher: null, subjects: classSubjects9_10, students: [], capacity: 45, room: '11-B', academicYear: '2024-2025' },
+      { className: '11', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '11-A', academicYear: '2024-2025' },
+      { className: '11', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '11-B', academicYear: '2024-2025' },
       // Class 12
-      { className: '12', section: 'A', classTeacher: null, subjects: classSubjects9_10, students: [], capacity: 45, room: '12-A', academicYear: '2024-2025' },
-      { className: '12', section: 'B', classTeacher: null, subjects: classSubjects9_10, students: [], capacity: 45, room: '12-B', academicYear: '2024-2025' }
+      { className: '12', section: 'A', classTeacher: null, subjects: [], students: [], capacity: 45, room: '12-A', academicYear: '2024-2025' },
+      { className: '12', section: 'B', classTeacher: null, subjects: [], students: [], capacity: 45, room: '12-B', academicYear: '2024-2025' }
     ];
 
     for (const classData of classesData) {
