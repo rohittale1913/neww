@@ -13,6 +13,7 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FiUsers />, label: 'View Teachers', path: '/admin/teachers-view' },
     { icon: <FiUsers />, label: 'View Staff', path: '/admin/staff-view' },
     { icon: <FiBook />, label: 'Class Assignments', path: '/admin/class-assignments' },
+    { icon: <FiCalendar />, label: 'Timetable', path: '/admin/timetable' },
     { icon: <FiCalendar />, label: 'Attendance', path: '/admin/attendance' },
     { icon: <FiDollarSign />, label: 'Fees', path: '/admin/fees' },
     { icon: <FiBarChart2 />, label: 'Exams', path: '/admin/exams' }
@@ -21,6 +22,7 @@ const Sidebar = ({ isOpen }) => {
   const teacherMenuItems = [
     { icon: <FiClipboard />, label: 'Overview', path: '/teacher?tab=overview' },
     { icon: <FiBook />, label: 'My Classes', path: '/teacher?tab=classes' },
+    { icon: <FiCalendar />, label: 'My Timetable', path: '/teacher/timetable' },
     { icon: <FiCalendar />, label: 'Attendance', path: '/teacher?tab=attendance' },
     { icon: <FiFileText />, label: 'Assignments', path: '/teacher?tab=assignments' },
     { icon: <FiBarChart2 />, label: 'Exams', path: '/teacher?tab=exams' }
@@ -28,6 +30,7 @@ const Sidebar = ({ isOpen }) => {
 
   const studentMenuItems = [
     { icon: <FiClipboard />, label: 'Overview', path: '/student?tab=overview' },
+    { icon: <FiCalendar />, label: 'Class Timetable', path: '/student/timetable' },
     { icon: <FiCalendar />, label: 'Attendance', path: '/student?tab=attendance' },
     { icon: <FiFileText />, label: 'Assignments', path: '/student?tab=assignments' },
     { icon: <FiBarChart2 />, label: 'Exams', path: '/student?tab=exams' },

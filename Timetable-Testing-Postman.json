@@ -1,0 +1,451 @@
+{
+  "info": {
+    "name": "Timetable Module Testing",
+    "description": "Complete API testing for timetable module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Setup & Prerequisites",
+      "item": [
+        {
+          "name": "1. Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@school.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login to get admin token. Copy the token from response and set it in {{ADMIN_TOKEN}}"
+          }
+        },
+        {
+          "name": "2. Get All Classes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/classes",
+              "host": ["{{BASE_URL}}"],
+              "path": ["classes"]
+            },
+            "description": "Get list of classes. Copy a class ID for later use."
+          }
+        },
+        {
+          "name": "3. Get All Teachers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/teachers",
+              "host": ["{{BASE_URL}}"],
+              "path": ["teachers"]
+            },
+            "description": "Get list of teachers. Copy a teacher ID for later use."
+          }
+        },
+        {
+          "name": "4. Get All Subjects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/classes/subjects",
+              "host": ["{{BASE_URL}}"],
+              "path": ["classes", "subjects"]
+            },
+            "description": "Get list of subjects. Copy a subject ID for later use."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Timetable CRUD Operations",
+      "item": [
+        {
+          "name": "1. Create Timetable Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{CLASS_ID}}\",\n  \"subject\": \"{{SUBJECT_ID}}\",\n  \"teacherId\": \"{{TEACHER_ID}}\",\n  \"day\": \"Monday\",\n  \"startTime\": \"08:00\",\n  \"endTime\": \"09:00\",\n  \"room\": \"R101\",\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/timetables",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables"]
+            },
+            "description": "Create a new timetable entry. Save the returned ID as {{TIMETABLE_ID}}"
+          }
+        },
+        {
+          "name": "2. Get All Timetables",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/timetables?classId={{CLASS_ID}}&academicYear=2024-2025",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables"],
+              "query": [
+                {
+                  "key": "classId",
+                  "value": "{{CLASS_ID}}"
+                },
+                {
+                  "key": "academicYear",
+                  "value": "2024-2025"
+                }
+              ]
+            },
+            "description": "Get all timetables with optional filters"
+          }
+        },
+        {
+          "name": "3. Get Class Timetable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/timetables/class/{{CLASS_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables", "class", "{{CLASS_ID}}"]
+            },
+            "description": "Get timetable for a specific class"
+          }
+        },
+        {
+          "name": "4. Get Teacher Timetable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/timetables/teacher/{{TEACHER_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables", "teacher", "{{TEACHER_ID}}"]
+            },
+            "description": "Get timetable for a specific teacher"
+          }
+        },
+        {
+          "name": "5. Update Timetable Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\",\n  \"room\": \"R102\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/timetables/{{TIMETABLE_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables", "{{TIMETABLE_ID}}"]
+            },
+            "description": "Update an existing timetable entry"
+          }
+        },
+        {
+          "name": "6. Delete Timetable Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/timetables/{{TIMETABLE_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables", "{{TIMETABLE_ID}}"]
+            },
+            "description": "Delete a timetable entry"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Conflict Detection Testing",
+      "item": [
+        {
+          "name": "1. Create First Entry (Monday 08:00-09:00)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{CLASS_ID}}\",\n  \"subject\": \"{{SUBJECT_ID}}\",\n  \"teacherId\": \"{{TEACHER_ID}}\",\n  \"day\": \"Monday\",\n  \"startTime\": \"08:00\",\n  \"endTime\": \"09:00\",\n  \"room\": \"R101\",\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/timetables",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables"]
+            }
+          }
+        },
+        {
+          "name": "2. Try Teacher Conflict (Same teacher, overlapping time - SHOULD FAIL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{CLASS_ID}}\",\n  \"subject\": \"{{SUBJECT_ID}}\",\n  \"teacherId\": \"{{TEACHER_ID}}\",\n  \"day\": \"Monday\",\n  \"startTime\": \"08:30\",\n  \"endTime\": \"09:30\",\n  \"room\": \"R102\",\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/timetables",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables"]
+            },
+            "description": "This should fail with message: 'Teacher has a scheduling conflict at this time'"
+          }
+        },
+        {
+          "name": "3. Try Room Conflict (Same room, overlapping time - SHOULD FAIL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{CLASS_ID}}\",\n  \"subject\": \"{{SUBJECT_ID}}\",\n  \"teacherId\": \"{{TEACHER_ID_2}}\",\n  \"day\": \"Monday\",\n  \"startTime\": \"08:30\",\n  \"endTime\": \"09:30\",\n  \"room\": \"R101\",\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/timetables",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables"]
+            },
+            "description": "This should fail with message: 'Room is already booked at this time'"
+          }
+        },
+        {
+          "name": "4. Create Non-Overlapping Entry (SHOULD SUCCEED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{CLASS_ID}}\",\n  \"subject\": \"{{SUBJECT_ID}}\",\n  \"teacherId\": \"{{TEACHER_ID_2}}\",\n  \"day\": \"Monday\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\",\n  \"room\": \"R102\",\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/timetables",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables"]
+            },
+            "description": "This should succeed - no conflicts"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role-Based Access Testing",
+      "item": [
+        {
+          "name": "1. Teacher - Get My Timetable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TEACHER_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/timetables/teacher-portal/my-timetable",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables", "teacher-portal", "my-timetable"]
+            },
+            "description": "Get logged-in teacher's personal timetable. Use teacher token."
+          }
+        },
+        {
+          "name": "2. Student - Get My Class Timetable",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/timetables/student-portal/my-timetable",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables", "student-portal", "my-timetable"]
+            },
+            "description": "Get student's class timetable. Use student token."
+          }
+        },
+        {
+          "name": "3. Student - Try Create (SHOULD FAIL - No permission)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{CLASS_ID}}\",\n  \"subject\": \"{{SUBJECT_ID}}\",\n  \"teacherId\": \"{{TEACHER_ID}}\",\n  \"day\": \"Tuesday\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\",\n  \"room\": \"R103\",\n  \"academicYear\": \"2024-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/timetables",
+              "host": ["{{BASE_URL}}"],
+              "path": ["timetables"]
+            },
+            "description": "This should fail - students can't create timetable entries"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "ADMIN_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "TEACHER_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "STUDENT_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "CLASS_ID",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "TEACHER_ID",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "TEACHER_ID_2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "SUBJECT_ID",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "TIMETABLE_ID",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

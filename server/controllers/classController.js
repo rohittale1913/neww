@@ -33,10 +33,16 @@ export const createClass = async (req, res) => {
     });
 
     await classObj.save();
+    
+    // Populate the response to match getAllClasses format
+    const populatedClass = await Class.findById(classObj._id)
+      .populate('subjects', 'name code')
+      .populate('classTeacher', 'name email')
+      .populate('students', 'name rollNumber');
 
     res.status(201).json({
       message: 'Class created successfully',
-      class: classObj
+      class: populatedClass
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

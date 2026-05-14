@@ -3,6 +3,7 @@ import Teacher from '../models/Teacher.js';
 import User from '../models/User.js';
 import Class from '../models/Class.js';
 import Student from '../models/Student.js';
+import Subject from '../models/Subject.js';
 
 // Assign teacher to class with specific subjects
 export const assignTeacherToClass = async (req, res) => {
@@ -375,6 +376,90 @@ export const getAvailableTeachersForClass = async (req, res) => {
     res.json(enhancedTeachers);
   } catch (error) {
     console.error('Error fetching available teachers:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get all subjects assigned to a class through active teacher assignments
+export const getSubjectsForClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    console.log('🔍 getSubjectsForClass called with classId:', classId);
+    
+    // Get the class to find className and section
+    const classDoc = await Class.findById(classId);
+    if (!classDoc) {
+      console.log('❌ Class not found with ID:', classId);
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    
+    console.log('✅ Class found:', classDoc.className, classDoc.section);
+    
+    // Get all active assignments for this class (both class_teacher and subject_teacher)
+    const assignments = await ClassSubjectTeacher.find({
+      classId: classId,
+      isActive: true
+    }).populate('teacherId', 'name email');
+    
+    console.log('📋 Total active assignments found for this class:', assignments.length);
+    assignments.forEach((a, i) => {
+      console.log(`  Assignment ${i + 1}: type=${a.assignmentType}, subjects=${JSON.stringify(a.subjects)}`);
+    });
+    
+    // Extract unique subjects from assignments (both class_teacher and subject_teacher can have subjects)
+    const subjectSet = new Set();
+    const subjectsWithTeachers = [];
+    
+    for (const assignment of assignments) {
+      if (assignment.subjects && Array.isArray(assignment.subjects) && assignment.subjects.length > 0) {
+        console.log(`📚 Processing assignment with ${assignment.subjects.length} subjects`);
+        for (const subjectName of assignment.subjects) {
+          const normalizedSubjectName = String(subjectName).trim();
+          if (!normalizedSubjectName || subjectSet.has(normalizedSubjectName)) continue;
+          subjectSet.add(normalizedSubjectName);
+
+          let subjectDoc = await Subject.findOne({ name: normalizedSubjectName });
+          if (!subjectDoc) {
+            const generatedCode = normalizedSubjectName.substring(0, 3).toUpperCase();
+            let code = generatedCode;
+            let suffix = 1;
+            while (await Subject.findOne({ code })) {
+              code = `${generatedCode}${suffix}`;
+              suffix += 1;
+            }
+            subjectDoc = new Subject({
+              name: normalizedSubjectName,
+              code,
+              description: `Auto-created subject for timetable assignment.`
+            });
+            await subjectDoc.save();
+          }
+
+          subjectsWithTeachers.push({
+            _id: subjectDoc._id,
+            name: subjectDoc.name,
+            code: subjectDoc.code,
+            teacherId: assignment.teacherId._id,
+            teacherName: assignment.teacherId.name
+          });
+        }
+      }
+    }
+    
+    console.log('✅ Final subjects extracted:', subjectsWithTeachers.length);
+    
+    res.json({
+      classId: classId,
+      className: classDoc.className,
+      section: classDoc.section,
+      subjectsCount: subjectsWithTeachers.length,
+      subjects: subjectsWithTeachers,
+      message: subjectsWithTeachers.length === 0 
+        ? 'No subjects assigned to this class. Admin must assign teachers with subjects.' 
+        : `Found ${subjectsWithTeachers.length} subjects assigned to this class`
+    });
+  } catch (error) {
+    console.error('Error fetching subjects for class:', error);
     res.status(500).json({ message: error.message });
   }
 };

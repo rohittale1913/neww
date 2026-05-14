@@ -30,6 +30,7 @@ import libraryRoutes from './routes/libraryRoutes.js';
 import transportRoutes from './routes/transportRoutes.js';
 import classRoutes from './routes/classRoutes.js';
 import classAssignmentRoutes from './routes/classAssignmentRoutes.js';
+import timetableRoutes from './routes/timetableRoutes.js';
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/class-assignments', classAssignmentRoutes);
+app.use('/api/timetables', timetableRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

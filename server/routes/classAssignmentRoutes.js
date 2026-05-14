@@ -7,7 +7,8 @@ import {
   deleteAssignment,
   getAvailableTeachersForClass,
   getAllClassesAndSections,
-  getClassStudents
+  getClassStudents,
+  getSubjectsForClass
 } from '../controllers/classAssignmentController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { roleMiddleware } from '../middleware/roleMiddleware.js';
@@ -26,5 +27,8 @@ router.get('/class-students', getClassStudents);
 router.get('/:assignmentId', getAssignmentWithConnections);
 router.put('/:assignmentId', updateAssignment);
 router.delete('/:assignmentId', deleteAssignment);
+
+// Separate route for getting subjects - accessible to all authenticated users (teachers, admin, accountant)
+router.get('/subjects/:classId', authMiddleware, getSubjectsForClass);
 
 export default router;

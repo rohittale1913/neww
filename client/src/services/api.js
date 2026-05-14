@@ -264,6 +264,19 @@ export const classAPI = {
   createTimetableEntry: (data) => api.post('/classes/timetable', data)
 };
 
+// Timetable APIs
+export const timetableAPI = {
+  getAll: (params) => api.get('/timetables', { params }),
+  getClassTimetable: (classId) => api.get(`/timetables/class/${classId}`),
+  getTeacherTimetable: (teacherId) => api.get(`/timetables/teacher/${teacherId}`),
+  getMyTimetable: () => api.get('/timetables/teacher-portal/my-timetable'),
+  getStudentTimetable: () => api.get('/timetables/student-portal/my-timetable'),
+  create: (data) => api.post('/timetables', data),
+  update: (id, data) => api.put(`/timetables/${id}`, data),
+  delete: (id) => api.delete(`/timetables/${id}`),
+  deleteClassTimetable: (classId) => api.delete(`/timetables/class/${classId}`)
+};
+
 // Subject APIs
 export const subjectAPI = {
   getAll: () => api.get('/classes/subjects'),
@@ -283,7 +296,8 @@ export const classAssignmentAPI = {
   getAllClasses: () => api.get('/class-assignments/classes-sections'),
   getClassStudents: (className, section) => api.get('/class-assignments/class-students', {
     params: { className, section }
-  })
+  }),
+  getSubjectsForClass: (classId) => api.get(`/class-assignments/subjects/${classId}`)
 };
 
 export default api;

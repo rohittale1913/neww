@@ -6,6 +6,7 @@ const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   class: { type: String, required: true },
   section: { type: String, required: true },
+  classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class' }, // Reference to Class document
   rollNumber: { type: Number, required: true },
   gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
   dateOfBirth: { type: Date, required: true },

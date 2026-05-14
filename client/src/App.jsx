@@ -26,6 +26,9 @@ import StudentAssignmentView from './pages/StudentAssignmentView';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherAssignmentCreate from './pages/TeacherAssignmentCreate';
 import TeacherAssignmentDetail from './pages/TeacherAssignmentDetail';
+import AdminTimetable from './pages/AdminTimetable';
+import TeacherTimetable from './pages/TeacherTimetable';
+import StudentTimetable from './pages/StudentTimetable';
 import AccountantDashboard from './pages/AccountantDashboard';
 import LibrarianDashboard from './pages/LibrarianDashboard';
 import TransportManagerDashboard from './pages/TransportManagerDashboard';
@@ -153,6 +156,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/timetable"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminTimetable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/class-assignments"
           element={
             <ProtectedRoute requiredRole="admin">
@@ -186,6 +197,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/teacher/timetable"
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <TeacherTimetable />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Student Routes */}
         <Route
@@ -209,6 +228,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="student">
               <StudentAssignmentView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/timetable"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <StudentTimetable />
             </ProtectedRoute>
           }
         />
