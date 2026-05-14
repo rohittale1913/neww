@@ -86,52 +86,18 @@ const AdminTimetable = () => {
 
   const handleSaveEntry = async (entryData) => {
     try {
-      const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      
-      // Extract applyToAllDays flag and remove it from the data sent to API
-      const { applyToAllDays, ...dataToSave } = entryData;
-      
       if (editingEntry) {
-        // When editing, don't support applyToAllDays
-        await timetableAPI.update(editingEntry._id, dataToSave);
+        await timetableAPI.update(editingEntry._id, entryData);
         setAlert({ type: 'success', message: 'Entry updated successfully' });
-        setShowModal(false);
-        fetchTimetable();
       } else {
-        // When creating, check if applyToAllDays is true
-        if (applyToAllDays) {
-          // Create entries for all days
-          let successCount = 0;
-          for (const day of daysOfWeek) {
-            try {
-              const dayEntryData = {
-                ...dataToSave,
-                day: day
-              };
-              await timetableAPI.create(dayEntryData);
-              successCount++;
-            } catch (error) {
-              console.error(`Failed to create entry for ${day}:`, error);
-            }
-          }
-          
-          if (successCount === 6) {
-            setAlert({ type: 'success', message: 'Entry created successfully for all 6 days!' });
-          } else {
-            setAlert({ type: 'warning', message: `Created for ${successCount}/6 days. Some entries may have failed.` });
-          }
-        } else {
-          // Single day creation
-          await timetableAPI.create(dataToSave);
-          setAlert({ type: 'success', message: 'Entry created successfully' });
-        }
-        setShowModal(false);
-        fetchTimetable();
+        await timetableAPI.create(entryData);
+        setAlert({ type: 'success', message: 'Entry created successfully' });
       }
+      setShowModal(false);
+      fetchTimetable();
     } catch (error) {
       setAlert({ type: 'error', message: error.response?.data?.message || 'Failed to save entry' });
     }
-  };
   };
 
   const getTimetableForDay = (day) => {

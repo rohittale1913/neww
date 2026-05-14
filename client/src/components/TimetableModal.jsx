@@ -11,8 +11,7 @@ const TimetableModal = ({ isOpen, onClose, onSave, editingEntry, selectedClassId
     startTime: '08:00',
     endTime: '09:00',
     room: '',
-    academicYear: academicYear || '2024-2025',
-    applyToAllDays: false // New flag for applying to all days
+    academicYear: academicYear || '2024-2025'
   });
 
   const [subjects, setSubjects] = useState([]);
@@ -52,15 +51,13 @@ const TimetableModal = ({ isOpen, onClose, onSave, editingEntry, selectedClassId
           startTime: editingEntry.startTime,
           endTime: editingEntry.endTime,
           room: editingEntry.room || '',
-          academicYear: editingEntry.academicYear || academicYear,
-          applyToAllDays: false // Always false when editing
+          academicYear: editingEntry.academicYear || academicYear
         });
       } else {
         setFormData(prev => ({
           ...prev,
           classId: selectedClassId,
-          academicYear: academicYear,
-          applyToAllDays: false // Always false for new entries
+          academicYear: academicYear
         }));
       }
     }
@@ -159,12 +156,7 @@ const TimetableModal = ({ isOpen, onClose, onSave, editingEntry, selectedClassId
   };
 
   const validateForm = () => {
-    // When applying to all days, day field is not required
-    const requiredFields = formData.applyToAllDays 
-      ? [formData.classId, formData.subject, formData.teacherId, formData.startTime, formData.endTime]
-      : [formData.classId, formData.subject, formData.teacherId, formData.day, formData.startTime, formData.endTime];
-    
-    if (requiredFields.some(field => !field)) {
+    if (!formData.classId || !formData.subject || !formData.teacherId || !formData.day || !formData.startTime || !formData.endTime) {
       setError('All fields are required');
       return false;
     }
@@ -182,8 +174,6 @@ const TimetableModal = ({ isOpen, onClose, onSave, editingEntry, selectedClassId
     e.preventDefault();
     if (!validateForm()) return;
 
-    // Pass the form data with applyToAllDays flag to parent
-    // Parent will handle batch creation if needed
     onSave(formData);
   };
 
@@ -299,8 +289,7 @@ const TimetableModal = ({ isOpen, onClose, onSave, editingEntry, selectedClassId
               name="day"
               value={formData.day}
               onChange={handleChange}
-              disabled={formData.applyToAllDays}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {daysOfWeek.map(day => (
                 <option key={day} value={day}>
@@ -308,32 +297,6 @@ const TimetableModal = ({ isOpen, onClose, onSave, editingEntry, selectedClassId
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* Apply to All Days Checkbox */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="applyToAllDays"
-                checked={formData.applyToAllDays}
-                onChange={(e) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    applyToAllDays: e.target.checked
-                  }));
-                }}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm font-medium text-gray-900">
-                Apply to All Days (Monday - Saturday)
-              </span>
-            </label>
-            {formData.applyToAllDays && (
-              <p className="text-xs text-blue-700 mt-2 ml-7">
-                ✓ This entry will be created for all 6 days of the week automatically.
-              </p>
-            )}
           </div>
 
           {/* Times */}
@@ -408,7 +371,7 @@ const TimetableModal = ({ isOpen, onClose, onSave, editingEntry, selectedClassId
               type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
-              {editingEntry ? 'Update' : formData.applyToAllDays ? 'Create for All Days' : 'Create'}
+              {editingEntry ? 'Update' : 'Create'}
             </button>
           </div>
         </form>
